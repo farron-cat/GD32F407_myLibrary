@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32F407</Define>
               <Undefine></Undefine>
-              <IncludePath>..\User;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\Firmware\CMSIS;..\Driver\bsp_leds</IncludePath>
+              <IncludePath>..\User;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\Firmware\CMSIS;..\Driver\bsp_leds;..\Driver\bsp_keys</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -414,6 +414,11 @@
               <FileName>bsp_leds.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Driver\bsp_leds\bsp_leds.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_keys.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_keys\bsp_keys.c</FilePath>
             </File>
           </Files>
         </Group>

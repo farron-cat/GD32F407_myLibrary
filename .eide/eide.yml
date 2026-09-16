@@ -23,6 +23,7 @@ virtualFolder:
     - name: Driver
       files:
         - path: Driver/bsp_leds/bsp_leds.c
+        - path: Driver/bsp_keys/bsp_keys.c
       folders: []
     - name: Firmware
       files:
@@ -53,6 +54,7 @@ targets:
         - Driver/bsp_leds
         - .cmsis/include
         - Project/RTE/_GD32F407
+        - Driver/bsp_keys
       libList: []
     excludeList: []
     settings:

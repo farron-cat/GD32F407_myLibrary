@@ -37,11 +37,8 @@ OF SUCH DAMAGE.
 #include "systick.h"
 #include <stdio.h>
 
+#include "bsp_keys.h"
 #include "bsp_leds.h"
-
-void LEDGroup_GPIO_Config(void);
-void KEY_GPIO_config(void);
-void KEY1_GPIO_config(void);
 
 /*!
     \brief    main function
@@ -54,47 +51,71 @@ int main(void)
 
     systick_config();
     bsp_leds_config();
+    bsp_keys_config();
 
     while (1)
     {
 
-        bsp_leds_open_all();
-        delay_1ms(1000);
-        bsp_leds_close_all();
-        delay_1ms(1000);
+        // bsp_leds_open_all();
+        // delay_1ms(1000);
+        // bsp_leds_close_all();
+        // delay_1ms(1000);
 
-        bsp_leds_open(LED2);
-        delay_1ms(1000);
-        bsp_leds_close(LED2);
-        delay_1ms(1000);
+        // bsp_leds_open(LED2);
+        // delay_1ms(1000);
+        // bsp_leds_close(LED2);
+        // delay_1ms(1000);
+
+        // KEY1 按下/松开控制 LED1
+        switch (bsp_keys_scan(KEY1))
+        {
+        case KEY_EVENT_PRESSED:
+            bsp_leds_open(LED1);
+            break;
+        case KEY_EVENT_RELEASED:
+            bsp_leds_close(LED1);
+            break;
+        default:
+            break;
+        }
+
+        // KEY2 按下/松开控制 LED2
+        switch (bsp_keys_scan(KEY2))
+        {
+        case KEY_EVENT_PRESSED:
+            bsp_leds_open(LED2);
+            break;
+        case KEY_EVENT_RELEASED:
+            bsp_leds_close(LED2);
+            break;
+        default:
+            break;
+        }
+
+        // KEY3 按下/松开控制 LED3
+        switch (bsp_keys_scan(KEY3))
+        {
+        case KEY_EVENT_PRESSED:
+            bsp_leds_open(LED3);
+            break;
+        case KEY_EVENT_RELEASED:
+            bsp_leds_close(LED3);
+            break;
+        default:
+            break;
+        }
+
+        // KEY4 按下/松开控制 LED4
+        switch (bsp_keys_scan(KEY4))
+        {
+        case KEY_EVENT_PRESSED:
+            bsp_leds_open(LED4);
+            break;
+        case KEY_EVENT_RELEASED:
+            bsp_leds_close(LED4);
+            break;
+        default:
+            break;
+        }
     }
-}
-
-void LEDGroup_GPIO_Config(void)
-{
-    // LED_SW LED灯组开关 低电平开
-    rcu_periph_clock_enable(RCU_GPIOC);
-    gpio_mode_set(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_6);
-    gpio_output_options_set(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_6);
-
-    // LED1-8 LED灯 低电平点亮，高电平熄灭
-    rcu_periph_clock_enable(RCU_GPIOD);
-    gpio_mode_set(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
-    gpio_output_options_set(GPIOD, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
-}
-
-// 核心板按键
-void KEY_GPIO_config(void)
-{
-    rcu_periph_clock_enable(RCU_GPIOA);
-    // 按键按下为高电平，外部接了下拉，可以不用接内部下拉
-    gpio_mode_set(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_PIN_0);
-}
-
-// 扩展版独立按键1
-void KEY1_GPIO_config(void)
-{
-    rcu_periph_clock_enable(RCU_GPIOC);
-    // 按键按下为低电平，需要内部上拉
-    gpio_mode_set(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_PIN_0);
 }
