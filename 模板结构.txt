@@ -1,0 +1,7 @@
+App：
+Middleware：中间件
+Driver：片外外设驱动
+Firmware：ARM内核文件，标准片内外设库
+Hardware：片上外设驱动
+Project：工程文件
+User：程序入口

@@ -1,0 +1,183 @@
+version: "4.1"
+name: GD32F407_myLibrary
+type: ARM
+deviceName: null
+packDir: null
+srcDirs: []
+virtualFolder:
+  name: <virtual_root>
+  files: []
+  folders:
+    - name: User
+      files:
+        - path: User/gd32f4xx_it.c
+        - path: User/main.c
+        - path: User/systick.c
+      folders: []
+    - name: App
+      files: []
+      folders: []
+    - name: Middleware
+      files: []
+      folders: []
+    - name: Driver
+      files:
+        - path: Driver/bsp_leds/bsp_leds.c
+      folders: []
+    - name: Firmware
+      files:
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_gpio.c
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_misc.c
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_rcu.c
+      folders: []
+    - name: CMSIS
+      files:
+        - path: Firmware/CMSIS/GD/GD32F4xx/Source/system_gd32f4xx.c
+        - path: Firmware/CMSIS/GD/GD32F4xx/Source/ARM/startup_gd32f407_427.s
+      folders: []
+dependenceList: []
+outDir: build
+miscInfo:
+  uid: 78b93f62ca610fbec388338dd14d9223
+targets:
+  GD32F407:
+    cppPreprocessAttrs:
+      defineList:
+        - USE_STDPERIPH_DRIVER
+        - GD32F407
+      incList:
+        - User
+        - Firmware/CMSIS/GD/GD32F4xx/Include
+        - Firmware/GD32F4xx_standard_peripheral/Include
+        - Firmware/CMSIS
+        - Driver/bsp_leds
+        - .cmsis/include
+        - Project/RTE/_GD32F407
+      libList: []
+    excludeList: []
+    settings:
+      debugger: cortex-debug
+    toolchain: AC6
+    toolchainConfigMap:
+      AC6:
+        archExtensions: ""
+        cpuType: Cortex-M4
+        floatingPointHardware: single
+        options:
+          version: 3
+          afterBuildTasks: []
+          asm-compiler:
+            $use: asm-auto
+            defines: []
+            misc-controls: ""
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            language-c: c99
+            language-cpp: c++03
+            link-time-optimization: false
+            one-elf-section-per-function: true
+            optimization: level-1
+            short-enums#wchar: true
+            warnings: ac5-like-warnings
+          global:
+            output-debug-info: enable
+            use-microLIB: true
+          linker:
+            $outputTaskExcludes:
+              - .bin
+            misc-controls: --diag_suppress=L6329
+            output-format: elf
+            ro-base: "0x08000000"
+            rw-base: "0x20000000"
+            xo-base: ""
+        scatterFilePath: ""
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 3
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x20000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x10000"
+                startAddr: "0x10000000"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 3
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x80000"
+                startAddr: "0x8000000"
+              tag: IROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: IROM
+        useCustomScatterFile: false
+    uploadConfigMap:
+      JLink:
+        baseAddr: ""
+        bin: ""
+        cpuInfo:
+          cpuName: "null"
+          vendor: "null"
+        otherCmds: ""
+        proType: 1
+        speed: 8000
+      OpenOCD:
+        baseAddr: "0x08000000"
+        bin: ""
+        interface: cmsis-dap
+        target: stm32f4x
+    uploader: OpenOCD
