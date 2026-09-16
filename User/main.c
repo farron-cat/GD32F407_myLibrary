@@ -63,9 +63,9 @@ int main(void)
         bsp_leds_close_all();
         delay_1ms(1000);
 
-        bsp_leds_open(LED1);
+        bsp_leds_open(LED2);
         delay_1ms(1000);
-        bsp_leds_close(LED1);
+        bsp_leds_close(LED2);
         delay_1ms(1000);
     }
 }

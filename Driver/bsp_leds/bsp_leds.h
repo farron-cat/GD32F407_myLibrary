@@ -15,11 +15,12 @@ typedef enum {
     LED8
 } LED_NUM;
 
-// typedef struct{
-//     rcu_periph_enum rcu;
-//     uint32_t port;
-//     uint32_t pin;
-// }LED_PARAM;
+// LED引脚参数结构体
+typedef struct {
+    rcu_periph_enum rcu;
+    uint32_t port;
+    uint32_t pin;
+} LED_PARAM;
 
 // 初始化LED灯
 void bsp_leds_config();
