@@ -30,6 +30,7 @@ virtualFolder:
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_gpio.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_misc.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_rcu.c
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_usart.c
       folders: []
     - name: CMSIS
       files:
