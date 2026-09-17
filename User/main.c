@@ -114,6 +114,18 @@ int fputc(int ch, FILE *f)
     return ch;
 }
 
+// 按键按下回调
+void on_key_press(KEY_NUM key)
+{
+    bsp_leds_open(key + 1);
+}
+
+// 按键松开回调
+void on_key_release(KEY_NUM key)
+{
+    bsp_leds_close(key + 1);
+}
+
 int main(void)
 {
 
@@ -127,6 +139,10 @@ int main(void)
 
     while (1)
     {
+        bsp_keys_scan(KEY1);
+        bsp_keys_scan(KEY2);
+        bsp_keys_scan(KEY3);
+        bsp_keys_scan(KEY4);
 
         // // KEY1 按下/松开控制 LED1
         // switch (bsp_keys_scan(KEY1))
@@ -182,7 +198,7 @@ int main(void)
 
         // send_byte(cnt++);
         // send_string("hello\r\n");
-        printf("hello %d\r\n", cnt++);
-        delay_1ms(10000);
+        // printf("hello %d\r\n", cnt++);
+        // delay_1ms(10000);
     }
 }

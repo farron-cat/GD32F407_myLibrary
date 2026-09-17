@@ -25,8 +25,14 @@ typedef struct {
     rcu_periph_enum rcu;
     uint32_t port;
     uint32_t pin;
-    
+
 } KEY_PARAM;
+
+// 按键按下回调
+extern void on_key_press(KEY_NUM key);
+
+// 按键松开回调
+extern void on_key_release(KEY_NUM key);
 
 // 初始化独立按键
 void bsp_keys_config();
