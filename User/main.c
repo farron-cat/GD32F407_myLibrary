@@ -1,83 +1,82 @@
-/*!
-    \file    main.c
-    \brief   led spark with systick
-
-    \version 2024-01-15, V3.2.0, firmware for GD32F4xx
-*/
-
-/*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
-
-    Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-    1. Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
-    3. Neither the name of the copyright holder nor the names of its contributors
-       may be used to endorse or promote products derived from this software without
-       specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-OF SUCH DAMAGE.
-*/
-
 #include "main.h"
 #include "gd32f4xx.h"
 #include "systick.h"
 #include <stdio.h>
 
-#include "bsp_keys.h"
-#include "bsp_leds.h"
+/**
+PA9		TXD
+PA10	RXD
+**/
+
+#define USART_RECEIVE_LENGTH 1024
+// 串口接收缓冲区大小
+uint8_t g_recv_buff[USART_RECEIVE_LENGTH]; // 接收缓冲区
+// 接收到字符存放的位置
+int g_recv_length = 0;
 
 static void USART_config()
 {
+    uint32_t usartx_tx_rcu = RCU_GPIOA;
+    uint32_t usartx_tx_port = GPIOA;
+    uint32_t usartx_tx_pin = GPIO_PIN_9;
+    uint32_t usartx_tx_af = GPIO_AF_7;
+
+    uint32_t usartx_rx_rcu = RCU_GPIOA;
+    uint32_t usartx_rx_port = GPIOA;
+    uint32_t usartx_rx_pin = GPIO_PIN_10;
+    uint32_t usartx_rx_af = GPIO_AF_7;
+
+    uint32_t usartx = USART0;
+    uint32_t usartx_rcu = RCU_USART0;
+    uint32_t usartx_irqn = USART0_IRQn;
+
+    uint32_t usartx_p_baudrate = 115200;
+    uint32_t usartx_p_parity = USART_PM_NONE;
+    uint32_t usartx_p_wl = USART_WL_8BIT;
+    uint32_t usartx_p_stop_bit = USART_STB_1BIT;
+    uint32_t usartx_p_data_first = USART_MSBF_LSB;
+
     /************** gpio config **************/
-    // 配置时钟
-    rcu_periph_clock_enable(RCU_GPIOA);
-    // 配置模式
-    gpio_mode_set(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_9);
-    gpio_mode_set(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_10);
-    // 配置复用功能
-    gpio_af_set(GPIOA, GPIO_AF_7, GPIO_PIN_9);
-    gpio_af_set(GPIOA, GPIO_AF_7, GPIO_PIN_10);
-    // 配置输出参数
-    gpio_output_options_set(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_9);
-    gpio_output_options_set(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+    // tx
+    rcu_periph_clock_enable(usartx_tx_rcu); // 配置时钟
+    gpio_mode_set(usartx_tx_port, GPIO_MODE_AF, GPIO_PUPD_NONE, usartx_tx_pin);
+    gpio_af_set(usartx_tx_port, usartx_tx_af, usartx_tx_pin);
+    gpio_output_options_set(usartx_tx_port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, usartx_tx_pin);
+    // rx
+    rcu_periph_clock_enable(usartx_rx_rcu); // 配置时钟
+    gpio_mode_set(usartx_rx_port, GPIO_MODE_AF, GPIO_PUPD_NONE, usartx_rx_pin);
+    gpio_af_set(usartx_rx_port, usartx_rx_af, usartx_rx_pin);
+    // gpio_output_options_set(usartx_rx_port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, usartx_rx_pin);
 
     /************** usart config **************/
     // 串口时钟
     rcu_periph_clock_enable(RCU_USART0);
     // USART复位
-    usart_deinit(USART0);
-    // 波特率
-    usart_baudrate_set(USART0, 115200);
-    // 校验位
-    usart_parity_config(USART0, USART_PM_NONE);
-    // 数据位数
-    usart_word_length_set(USART0, USART_WL_8BIT);
-    // 停止位
-    usart_stop_bit_set(USART0, USART_STB_1BIT);
-    // 先发送高位还是低位
-    usart_data_first_config(USART0, USART_MSBF_LSB);
+    usart_deinit(usartx);
+
+    usart_baudrate_set(usartx, usartx_p_baudrate);        // 波特率
+    usart_parity_config(usartx, usartx_p_parity);         // 校验位
+    usart_word_length_set(usartx, usartx_p_wl);           // 数据位数
+    usart_stop_bit_set(usartx, usartx_p_stop_bit);        // 停止位
+    usart_data_first_config(usartx, usartx_p_data_first); // 先发送高位还是低位
+
     // 发送功能配置
-    usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);
+    usart_transmit_config(usartx, USART_TRANSMIT_ENABLE);
+
+    // 接收功能配置
+    usart_receive_config(usartx, USART_RECEIVE_ENABLE);
+    // 接收中断配置
+    nvic_irq_enable(usartx_irqn, 2, 2);
+    // usart int rbne
+    usart_interrupt_enable(usartx, USART_INT_RBNE);
+    usart_interrupt_enable(usartx, USART_INT_IDLE);
+
     // 使能串口
-    usart_enable(USART0);
+    usart_enable(usartx);
 }
 
 // 发送一byte数据
-static void send_byte(uint8_t data)
+void send_byte(uint8_t data)
 {
     // 通过USART发送
     usart_data_transmit(USART0, data);
@@ -88,7 +87,7 @@ static void send_byte(uint8_t data)
 }
 
 // 发送多个byte数据
-void send_data_array(uint8_t *data, uint32_t len)
+void send_data(uint8_t *data, uint32_t len)
 {
     while (data && len--)
     {
@@ -98,7 +97,7 @@ void send_data_array(uint8_t *data, uint32_t len)
 }
 
 // 发送字符串
-static void send_string(char *data)
+void send_string(char *data)
 {
     // 满足: 1.data指针不为空  2.发送的数据不是\0结束标记
     while (data && *data)
@@ -108,81 +107,41 @@ static void send_string(char *data)
     }
 }
 
+// 重写fputc方法  调用printf,会自动调用这个方法实现打印
 int fputc(int ch, FILE *f)
 {
     send_byte((uint8_t)ch);
     return ch;
 }
 
+void USART0_IRQHandler(void)
+{
+    if ((usart_interrupt_flag_get(USART0, USART_INT_FLAG_RBNE)) == SET)
+    {
+        usart_interrupt_flag_clear(USART0, USART_INT_FLAG_RBNE);
+        uint16_t value = usart_data_receive(USART0);
+        g_recv_buff[g_recv_length] = value;
+        g_recv_length++;
+    }
+    if (usart_interrupt_flag_get(USART0, USART_INT_FLAG_IDLE) == SET)
+    {
+        // 读取缓冲区,清空缓冲区
+        usart_data_receive(USART0);
+        g_recv_buff[g_recv_length] = '\0';
+
+        // TODO: g_recv_buff为接收的数据，g_recv_length为接收的长度
+        printf("rec:%s", g_recv_buff);
+
+        g_recv_length = 0;
+    }
+}
+
 int main(void)
 {
-
     systick_config();
-    bsp_leds_config();
-    bsp_keys_config();
-
     USART_config();
-
-    uint8_t cnt = 0U;
 
     while (1)
     {
-
-        // // KEY1 按下/松开控制 LED1
-        // switch (bsp_keys_scan(KEY1))
-        // {
-        // case KEY_EVENT_PRESSED:
-        //     bsp_leds_open(LED1);
-        //     break;
-        // case KEY_EVENT_RELEASED:
-        //     bsp_leds_close(LED1);
-        //     break;
-        // default:
-        //     break;
-        // }
-
-        // // KEY2 按下/松开控制 LED2
-        // switch (bsp_keys_scan(KEY2))
-        // {
-        // case KEY_EVENT_PRESSED:
-        //     bsp_leds_open(LED2);
-        //     break;
-        // case KEY_EVENT_RELEASED:
-        //     bsp_leds_close(LED2);
-        //     break;
-        // default:
-        //     break;
-        // }
-
-        // // KEY3 按下/松开控制 LED3
-        // switch (bsp_keys_scan(KEY3))
-        // {
-        // case KEY_EVENT_PRESSED:
-        //     bsp_leds_open(LED3);
-        //     break;
-        // case KEY_EVENT_RELEASED:
-        //     bsp_leds_close(LED3);
-        //     break;
-        // default:
-        //     break;
-        // }
-
-        // // KEY4 按下/松开控制 LED4
-        // switch (bsp_keys_scan(KEY4))
-        // {
-        // case KEY_EVENT_PRESSED:
-        //     bsp_leds_open(LED4);
-        //     break;
-        // case KEY_EVENT_RELEASED:
-        //     bsp_leds_close(LED4);
-        //     break;
-        // default:
-        //     break;
-        // }
-
-        // send_byte(cnt++);
-        // send_string("hello\r\n");
-        printf("hello %d\r\n", cnt++);
-        delay_1ms(10000);
     }
 }
