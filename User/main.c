@@ -77,6 +77,15 @@ int main(void)
 
     while (1)
     {
+        cnt++;
+        // 20ms扫描一次按键
         bsp_keys_scan();
+        if (cnt >= 25)
+        {
+            cnt = 0;
+            // 500ms电池流水灯状态机处理一次
+            bsp_battery_flow_process();
+        }
+        delay_1ms(20);
     }
 }

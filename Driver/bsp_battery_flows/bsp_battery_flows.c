@@ -3,6 +3,7 @@
 static uint8_t flow_flag = 0;
 static uint8_t battery = 0;
 static BATTERY_STATE battery_state = STATE_IDLE;
+static uint8_t stoping_cnt = 0;
 
 // 初始化充电流水灯
 void bsp_battery_flow_init()
@@ -15,8 +16,35 @@ void bsp_battery_flow_init()
 // 开始充电
 void bsp_battery_flow_start()
 {
-    while (1)
+    // 改变状态
+    battery_state = STATE_CHARGING;
+}
+
+// 增加电量
+void bsp_battery_flow_update()
+{
+    battery += 1;
+    flow_flag = battery;
+}
+
+// 停止充电
+void bsp_battery_flow_stop()
+{
+    // 改变状态
+    battery_state = STATE_STOPING;
+}
+
+// 状态机处理
+// 每500ms调用一次
+void bsp_battery_flow_process()
+{
+
+    switch (battery_state)
     {
+    case STATE_IDLE:
+        bsp_leds_close_all();
+        break;
+    case STATE_CHARGING:
         if (flow_flag > 0)
             bsp_leds_open(LED1);
         else
@@ -37,81 +65,64 @@ void bsp_battery_flow_start()
         else
             bsp_leds_close(LED4);
 
-        delay_1ms(1000);
         flow_flag++;
         if (flow_flag > 4)
             flow_flag = battery;
-    }
-}
-
-void bsp_battery_flow_update()
-{
-    battery += 1;
-    flow_flag = battery;
-}
-
-void bsp_battery_flow_stop()
-{
-    // 常量的灯闪烁三次  再熄灭
-    for (uint8_t i = 0; i < 3; i++)
-    {
-        // 根据电量确定需要亮灯的个数
-        if (battery > 0)
-        {
-            bsp_leds_open(LED1);
-        }
-        else
-        {
-            bsp_leds_close(LED1);
-        }
-
-        if (battery > 1)
-        {
-            bsp_leds_open(LED2);
-        }
-        else
-        {
-            bsp_leds_close(LED2);
-        }
-
-        if (battery > 2)
-        {
-            bsp_leds_open(LED3);
-        }
-        else
-        {
-            bsp_leds_close(LED3);
-        }
-
-        if (battery > 3)
-        {
-            bsp_leds_open(LED4);
-        }
-        else
-        {
-            bsp_leds_close(LED4);
-        }
-
-        delay_1ms(500);
-
-        // 熄灭
-        bsp_leds_close_all();
-        delay_1ms(500);
-    }
-}
-
-void bsp_battery_flow_process()
-{
-
-    switch (battery_state)
-    {
-    case STATE_IDLE:
-
-        break;
-    case STATE_CHARGING:
-
         break;
     case STATE_STOPING:
+        // 常量的灯闪烁三次再熄灭
+        stoping_cnt++;
+        // stoping_cnt计数到6停止
+        if (stoping_cnt >= 6)
+        {
+            stoping_cnt = 0;
+            battery_state = STATE_IDLE;
+        }
+        // stoping_cnt偶数亮，奇数灭
+        else if (stoping_cnt % 2 == 0)
+        {
+            // 根据电量确定需要亮灯的个数
+            if (battery > 0)
+            {
+                bsp_leds_open(LED1);
+            }
+            else
+            {
+                bsp_leds_close(LED1);
+            }
+
+            if (battery > 1)
+            {
+                bsp_leds_open(LED2);
+            }
+            else
+            {
+                bsp_leds_close(LED2);
+            }
+
+            if (battery > 2)
+            {
+                bsp_leds_open(LED3);
+            }
+            else
+            {
+                bsp_leds_close(LED3);
+            }
+
+            if (battery > 3)
+            {
+                bsp_leds_open(LED4);
+            }
+            else
+            {
+                bsp_leds_close(LED4);
+            }
+        }
+        else
+        {
+            // 熄灭
+            bsp_leds_close_all();
+        }
 
         break;
     }
