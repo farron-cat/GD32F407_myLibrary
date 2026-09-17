@@ -52,7 +52,7 @@ FlagStatus bsp_keys_get_state(KEY_NUM key)
 }
 
 // 扫描按键，返回事件枚举
-KEY_EVENT bsp_keys_scan(KEY_NUM key)
+KEY_EVENT bsp_key_scan(KEY_NUM key)
 {
     FlagStatus curSta = bsp_keys_get_state(key);
     KEY_EVENT event = KEY_EVENT_NONE;
@@ -73,4 +73,12 @@ KEY_EVENT bsp_keys_scan(KEY_NUM key)
     }
 
     return event;
+}
+
+void bsp_keys_scan()
+{
+    bsp_key_scan(KEY1);
+    bsp_key_scan(KEY2);
+    bsp_key_scan(KEY3);
+    bsp_key_scan(KEY4);
 }
