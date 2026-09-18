@@ -34,6 +34,13 @@ void bsp_battery_flow_stop()
     battery_state = STATE_STOPING;
 }
 
+// 显示电量
+void bsp_battery_flow_show()
+{
+    // 改变状态
+    battery_state = STATE_SHOW;
+}
+
 // 状态机处理
 // 每500ms调用一次
 void bsp_battery_flow_process()
@@ -125,5 +132,33 @@ void bsp_battery_flow_process()
         }
 
         break;
+    case STATE_SHOW:
+        if (stoping_cnt >= 6)
+        {
+            stoping_cnt = 0;
+            battery_state = STATE_IDLE;
+        }
+
+        if (battery > 0)
+            bsp_leds_open(LED1);
+        else
+            bsp_leds_close(LED1);
+
+        if (battery > 1)
+            bsp_leds_open(LED2);
+        else
+            bsp_leds_close(LED2);
+
+        if (battery > 2)
+            bsp_leds_open(LED3);
+        else
+            bsp_leds_close(LED3);
+
+        if (battery > 3)
+            bsp_leds_open(LED4);
+        else
+            bsp_leds_close(LED4);
+
+        stoping_cnt++;
     }
 }

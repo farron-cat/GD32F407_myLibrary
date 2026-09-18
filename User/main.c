@@ -56,6 +56,10 @@ void on_key_press(KEY_NUM key)
     {
         bsp_battery_flow_stop();
     }
+    else if (key == KEY4)
+    {
+        bsp_battery_flow_show();
+    }
 }
 
 // // 按键松开回调

@@ -9,7 +9,8 @@
 typedef enum {
     STATE_IDLE = 0,
     STATE_CHARGING,
-    STATE_STOPING
+    STATE_STOPING,
+    STATE_SHOW
 } BATTERY_STATE;
 
 // 初始化充电流水灯
@@ -23,6 +24,9 @@ void bsp_battery_flow_update();
 
 // 停止充电
 void bsp_battery_flow_stop();
+
+// 显示电量
+void bsp_battery_flow_show();
 
 // 状态机处理
 void bsp_battery_flow_process();
