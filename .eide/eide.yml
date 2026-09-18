@@ -38,6 +38,10 @@ virtualFolder:
         - path: Firmware/CMSIS/GD/GD32F4xx/Source/system_gd32f4xx.c
         - path: Firmware/CMSIS/GD/GD32F4xx/Source/ARM/startup_gd32f407_427.s
       folders: []
+    - name: Hardware
+      files:
+        - path: Hardware/msp_uart/msp_uart.c
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -58,6 +62,7 @@ targets:
         - Project/RTE/_GD32F407
         - Driver/bsp_keys
         - Driver/bsp_battery_flows
+        - Hardware/msp_uart
       libList: []
     excludeList: []
     settings:
