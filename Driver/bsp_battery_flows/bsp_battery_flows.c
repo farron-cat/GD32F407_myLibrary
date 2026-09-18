@@ -1,4 +1,5 @@
 #include "bsp_battery_flows.h"
+#include <stdio.h>
 
 static uint8_t flow_flag = 0;
 static uint8_t battery = 0;
@@ -18,6 +19,7 @@ void bsp_battery_flow_start()
 {
     // 改变状态
     battery_state = STATE_CHARGING;
+    printf("battery_state\n");
 }
 
 // 增加电量
