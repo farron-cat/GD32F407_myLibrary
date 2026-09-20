@@ -8,30 +8,30 @@
 #include "bsp_leds.h"
 #include "msp_uart.h"
 
-// 按键按下回调
-void on_key_press(KEY_NUM key)
-{
-    if (key == KEY1)
-    {
-        bsp_battery_flow_start();
-        printf("KEY1 pressed\r\n");
-    }
-    else if (key == KEY2)
-    {
-        bsp_battery_flow_update();
-        printf("KEY2 pressed\r\n");
-    }
-    else if (key == KEY3)
-    {
-        bsp_battery_flow_stop();
-        printf("KEY3 pressed\r\n");
-    }
-    else if (key == KEY4)
-    {
-        bsp_battery_flow_show();
-        printf("KEY4 pressed\r\n");
-    }
-}
+// // 按键按下回调
+// void on_key_press(KEY_NUM key)
+// {
+//     if (key == KEY1)
+//     {
+//         bsp_battery_flow_start();
+//         printf("KEY1 pressed\r\n");
+//     }
+//     else if (key == KEY2)
+//     {
+//         bsp_battery_flow_update();
+//         printf("KEY2 pressed\r\n");
+//     }
+//     else if (key == KEY3)
+//     {
+//         bsp_battery_flow_stop();
+//         printf("KEY3 pressed\r\n");
+//     }
+//     else if (key == KEY4)
+//     {
+//         bsp_battery_flow_show();
+//         printf("KEY4 pressed\r\n");
+//     }
+// }
 
 // // 按键松开回调
 // void on_key_release(KEY_NUM key)
@@ -67,6 +67,24 @@ void EXTI_PA0_config(void)
     EXTI0_config();
 }
 
+void EXTI_PC3_config(void)
+{
+    // 1.配置引脚GPIO模式
+    rcu_periph_clock_enable(RCU_GPIOC);
+    gpio_mode_set(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_PIN_3);
+    // 2.选择EXTI检测线路连接引脚(SYSCFG)
+    rcu_periph_clock_enable(RCU_SYSCFG);
+    syscfg_exti_line_config(EXTI_SOURCE_GPIOC, EXTI_SOURCE_PIN3);
+    // 3. 配置EXTI检测极性(上升沿/下降沿/BOTH触发)
+    exti_init(EXTI_3, EXTI_INTERRUPT, EXTI_TRIG_BOTH);
+    // 4. 告诉NVIC要处理EXTI中断(NVIC中注册)
+    nvic_irq_enable(EXTI3_IRQn, 2, 2);
+    // 5. 清除中断标志位
+    exti_interrupt_flag_clear(EXTI_3);
+    // 打开EXTI中断
+    exti_interrupt_enable(EXTI_3);
+}
+
 int main(void)
 {
     systick_config();
@@ -79,6 +97,7 @@ int main(void)
     // bsp_battery_flow_init();
 
     EXTI_PA0_config();
+    EXTI_PC3_config();
 
     uint8_t cnt = 0U;
 
@@ -117,6 +136,42 @@ void EXTI0_IRQHandler(void)
         {
             // 下降沿
             printf("EXTI0_IRQHandler: falling edge\r\n");
+        }
+    }
+}
+
+uint64_t pre_cnt = 0U;
+FlagStatus pre_status = SET;
+
+void EXTI3_IRQHandler(void)
+{
+    uint64_t cur_cnt = get_us_cnt();
+    // 中断处理函数中的套路：先判断中断标志位，再清除中断标志位
+    if (exti_interrupt_flag_get(EXTI_3) == SET)
+    {
+        exti_interrupt_flag_clear(EXTI_3);
+
+        // 消抖
+        if (cur_cnt - pre_cnt < 30000)
+            return;
+        pre_cnt = cur_cnt;
+        FlagStatus cur_status = gpio_input_bit_get(GPIOC, GPIO_PIN_3);
+        if (cur_status == pre_status)
+            return;
+        pre_status = cur_status;
+
+        // 做点事
+        // printf("EXTI0_IRQHandler\r\n");
+        // 通过读取PA0引脚电平，判断是上升沿还是下降沿
+        if (gpio_input_bit_get(GPIOC, GPIO_PIN_3) == RESET)
+        {
+            // 下降沿
+            printf("EXTI3_IRQHandler: falling edge\r\n");
+        }
+        else
+        {
+            // 上升沿
+            printf("EXTI3_IRQHandler: rising edge\r\n");
         }
     }
 }

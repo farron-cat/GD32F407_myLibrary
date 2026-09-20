@@ -45,5 +45,7 @@ void delay_1ms(uint32_t count);
 void delay_1us(uint32_t count);
 /* delay decrement */
 void delay_decrement(void);
+/* get_us_cnt*/
+uint64_t get_us_cnt(void);
 
 #endif /* SYS_TICK_H */

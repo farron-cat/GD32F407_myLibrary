@@ -32,10 +32,11 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 
-#include "gd32f4xx.h"
 #include "systick.h"
+#include "gd32f4xx.h"
 
 volatile static uint32_t delay;
+volatile static uint64_t us_cnt;
 
 /*!
     \brief    configure systick
@@ -46,9 +47,11 @@ volatile static uint32_t delay;
 void systick_config(void)
 {
     /* setup systick timer for 1000000Hz interrupts */
-    if(SysTick_Config(SystemCoreClock / 1000000U)) { //1us
+    if (SysTick_Config(SystemCoreClock / 1000000U))
+    { // 1us
         /* capture error */
-        while(1) {
+        while (1)
+        {
         }
     }
     /* configure the systick handler priority */
@@ -65,7 +68,8 @@ void delay_1ms(uint32_t count)
 {
     delay = count * 1000;
 
-    while(0U != delay) {
+    while (0U != delay)
+    {
     }
 }
 
@@ -79,7 +83,8 @@ void delay_1us(uint32_t count)
 {
     delay = count;
 
-    while(0U != delay) {
+    while (0U != delay)
+    {
     }
 }
 
@@ -91,7 +96,15 @@ void delay_1us(uint32_t count)
 */
 void delay_decrement(void)
 {
-    if(0U != delay) {
+    us_cnt++;
+
+    if (0U != delay)
+    {
         delay--;
     }
+}
+
+uint64_t get_us_cnt(void)
+{
+    return us_cnt;
 }
