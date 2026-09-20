@@ -270,7 +270,7 @@ __weak void on_usart2_recv(uint8_t *data, uint32_t len)
 
     // g_recv_buff为接收的数据，g_recv_length为接收的长度
     // 原样发送回去
-    send_string(USART2, data);
+    send_string(USART2, (char *)data);
 }
 
 // USART2中断处理函数必须叫这个
