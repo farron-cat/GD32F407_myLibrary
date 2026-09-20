@@ -42,13 +42,13 @@ void on_key_press(KEY_NUM key)
 int main(void)
 {
     systick_config();
-    USART0_config();
-    USART2_config();
 
     bsp_leds_config();
     bsp_keys_config();
 
     bsp_battery_flow_init();
+
+    msp_uart_init();
 
     uint8_t cnt = 0U;
 
