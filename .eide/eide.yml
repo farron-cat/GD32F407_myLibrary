@@ -32,6 +32,8 @@ virtualFolder:
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_misc.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_rcu.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_usart.c
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_syscfg.c
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_exti.c
       folders: []
     - name: CMSIS
       files:
@@ -41,6 +43,7 @@ virtualFolder:
     - name: Hardware
       files:
         - path: Hardware/msp_uart/msp_uart.c
+        - path: Hardware/msp_exti/msp_exti.c
       folders: []
 dependenceList: []
 outDir: build
@@ -63,6 +66,7 @@ targets:
         - Driver/bsp_keys
         - Driver/bsp_battery_flows
         - Hardware/msp_uart
+        - Hardware/msp_exti
       libList: []
     excludeList: []
     settings:
