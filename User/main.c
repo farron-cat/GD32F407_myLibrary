@@ -29,43 +29,8 @@
 void BUZZER_GPIO_config(void)
 {
     rcu_periph_clock_enable(RCU_GPIOB);
-    gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_9);
-    gpio_output_options_set(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_9);
-}
-
-void Timer5_config(void)
-{
-    // 1.打开外设时钟
-    rcu_periph_clock_enable(RCU_TIMER5);
-
-    // 2.初始化定时器
-    timer_parameter_struct timer_init_struct;
-    timer_struct_para_init(&timer_init_struct);
-    timer_init_struct.prescaler = 1680 - 1;                // 定时器时钟预分频
-    timer_init_struct.alignedmode = TIMER_COUNTER_EDGE;    // 定时器计数模式
-    timer_init_struct.counterdirection = TIMER_COUNTER_UP; // 定时器计数方向
-    timer_init_struct.period = 100 - 1;                    // 定时器周期
-    timer_init_struct.clockdivision = TIMER_CKDIV_DIV1;    // 定时器时钟分频
-    timer_init_struct.repetitioncounter = 0U;              // 定时器重复计数器
-
-    timer_init(TIMER5, &timer_init_struct);
-    // 3.配置中断
-    nvic_irq_enable(TIMER5_DAC_IRQn, 2, 2);
-    timer_interrupt_flag_clear(TIMER5, TIMER_INT_UP);
-    timer_interrupt_enable(TIMER5, TIMER_INT_UP);
-    // 4.使能定时器
-    timer_enable(TIMER5);
-}
-
-void TIMER5_DAC_IRQHandler(void)
-{
-    if (timer_interrupt_flag_get(TIMER5, TIMER_INT_UP) == SET)
-    {
-        timer_interrupt_flag_clear(TIMER5, TIMER_INT_UP);
-
-        gpio_bit_toggle(GPIOB, GPIO_PIN_9);
-        printf("TIMER5\r\n");
-    }
+    gpio_mode_set(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_9);
+    gpio_af_set(GPIOB, GPIO_AF_2, GPIO_PIN_9);
 }
 
 void Timer1_config(void)
@@ -120,11 +85,14 @@ void Timer3_config(void)
     timer_channel_output_struct_para_init(&ocpara);
     ocpara.outputstate = (uint16_t)TIMER_CCX_ENABLE; // 打开通道输出
     timer_channel_output_config(TIMER3, TIMER_CH_0, &ocpara);
+    timer_channel_output_config(TIMER3, TIMER_CH_3, &ocpara);
 
     // 4.输出模式配置
     timer_channel_output_mode_config(TIMER3, TIMER_CH_0, TIMER_OC_MODE_PWM0);
+    timer_channel_output_mode_config(TIMER3, TIMER_CH_3, TIMER_OC_MODE_PWM0);
     // 5.设置占空比
     timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, (PERIOD + 1) * 0.5);
+    timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_3, (PERIOD + 1) * 0.5);
     // 6.使能定时器
     timer_enable(TIMER3);
 }
@@ -161,15 +129,13 @@ int main(void)
     Timer1_config();
     PA2_GPIO_config();
 
-    Timer5_config();
-
     //============ 片外外设 ============
     // LED灯组初始化
     bsp_leds_config();
     Timer3_config();
     PD12_GPIO_config();
 
-    // BUZZER_GPIO_config();
+    BUZZER_GPIO_config();
     // 按键初始化
     bsp_keys_config();
 
@@ -183,6 +149,7 @@ int main(void)
         // 计算比较值：CCR = (ARR+1) * duty% / 100
         uint16_t ccr = (uint16_t)(((uint32_t)(PERIOD + 1) * duty_percent) / 100);
         timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, ccr);
+        timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_3, ccr);
 
         delay_1ms(10); // 每 10ms 变一次，90 步约 0.9 秒一个来回
 
