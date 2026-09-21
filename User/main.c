@@ -25,6 +25,49 @@
 
 #define PRESCALER 1680 - 1
 #define PERIOD (SystemCoreClock / (PRESCALER + 1) / 1000) - 1
+
+void BUZZER_GPIO_config(void)
+{
+    rcu_periph_clock_enable(RCU_GPIOB);
+    gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_9);
+    gpio_output_options_set(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_9);
+}
+
+void Timer5_config(void)
+{
+    // 1.打开外设时钟
+    rcu_periph_clock_enable(RCU_TIMER5);
+
+    // 2.初始化定时器
+    timer_parameter_struct timer_init_struct;
+    timer_struct_para_init(&timer_init_struct);
+    timer_init_struct.prescaler = 1680 - 1;                // 定时器时钟预分频
+    timer_init_struct.alignedmode = TIMER_COUNTER_EDGE;    // 定时器计数模式
+    timer_init_struct.counterdirection = TIMER_COUNTER_UP; // 定时器计数方向
+    timer_init_struct.period = 100 - 1;                    // 定时器周期
+    timer_init_struct.clockdivision = TIMER_CKDIV_DIV1;    // 定时器时钟分频
+    timer_init_struct.repetitioncounter = 0U;              // 定时器重复计数器
+
+    timer_init(TIMER5, &timer_init_struct);
+    // 3.配置中断
+    nvic_irq_enable(TIMER5_DAC_IRQn, 2, 2);
+    timer_interrupt_flag_clear(TIMER5, TIMER_INT_UP);
+    timer_interrupt_enable(TIMER5, TIMER_INT_UP);
+    // 4.使能定时器
+    timer_enable(TIMER5);
+}
+
+void TIMER5_DAC_IRQHandler(void)
+{
+    if (timer_interrupt_flag_get(TIMER5, TIMER_INT_UP) == SET)
+    {
+        timer_interrupt_flag_clear(TIMER5, TIMER_INT_UP);
+
+        gpio_bit_toggle(GPIOB, GPIO_PIN_9);
+        printf("TIMER5\r\n");
+    }
+}
+
 void Timer1_config(void)
 {
     // 1.打开外设时钟
@@ -118,11 +161,15 @@ int main(void)
     Timer1_config();
     PA2_GPIO_config();
 
+    Timer5_config();
+
     //============ 片外外设 ============
     // LED灯组初始化
     bsp_leds_config();
     Timer3_config();
     PD12_GPIO_config();
+
+    // BUZZER_GPIO_config();
     // 按键初始化
     bsp_keys_config();
 
