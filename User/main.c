@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "bsp_battery_flows.h"
+#include "bsp_buzzer.h"
 #include "bsp_keys.h"
 #include "bsp_leds.h"
 #include "msp_exti.h"
@@ -25,47 +26,6 @@
 
 #define PRESCALER 1680 - 1
 #define PERIOD (SystemCoreClock / (PRESCALER + 1) / 1000) - 1
-
-void BUZZER_GPIO_config(void)
-{
-    rcu_periph_clock_enable(RCU_GPIOB);
-    gpio_mode_set(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_9);
-    gpio_af_set(GPIOB, GPIO_AF_2, GPIO_PIN_9);
-}
-
-void Timer1_config(void)
-{
-    // 1.打开外设时钟
-    rcu_periph_clock_enable(RCU_TIMER1);
-
-    // 2.初始化定时器
-    timer_parameter_struct timer_init_struct;
-    timer_struct_para_init(&timer_init_struct);
-    timer_init_struct.prescaler = PRESCALER; // 定时器时钟预分频
-    timer_init_struct.period = PERIOD;       // 定时器周期
-
-    timer_init(TIMER1, &timer_init_struct);
-
-    // 3.配置PWM输出通道
-    timer_oc_parameter_struct ocpara;
-    timer_channel_output_struct_para_init(&ocpara);
-    // 通道P
-    ocpara.outputstate = (uint16_t)TIMER_CCX_ENABLE; // 打开通道输出
-    ocpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
-    ocpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
-    // 通道N
-    ocpara.outputnstate = TIMER_CCXN_DISABLE;
-    ocpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
-    ocpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
-    timer_channel_output_config(TIMER1, TIMER_CH_2, &ocpara);
-    // 4.输出模式配置
-    timer_channel_output_mode_config(TIMER1, TIMER_CH_2, TIMER_OC_MODE_PWM0);
-    // 5.设置占空比
-    timer_channel_output_pulse_value_config(TIMER1, TIMER_CH_2, (PERIOD + 1) * 0.5);
-
-    // 6.使能定时器
-    timer_enable(TIMER1);
-}
 
 void Timer3_config(void)
 {
@@ -89,19 +49,10 @@ void Timer3_config(void)
 
     // 4.输出模式配置
     timer_channel_output_mode_config(TIMER3, TIMER_CH_0, TIMER_OC_MODE_PWM0);
-    timer_channel_output_mode_config(TIMER3, TIMER_CH_3, TIMER_OC_MODE_PWM0);
     // 5.设置占空比
     timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, (PERIOD + 1) * 0.5);
-    timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_3, (PERIOD + 1) * 0.5);
     // 6.使能定时器
     timer_enable(TIMER3);
-}
-
-void PA2_GPIO_config(void)
-{
-    rcu_periph_clock_enable(RCU_GPIOA);
-    gpio_mode_set(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_2);
-    gpio_af_set(GPIOA, GPIO_AF_1, GPIO_PIN_2);
 }
 
 void PD12_GPIO_config(void)
@@ -125,24 +76,35 @@ int main(void)
     msp_uart_init();
     // EXTI0 PA0 和 EXTI3 PC3初始化
     msp_exti_init();
-    // TIMER1初始化
-    Timer1_config();
-    PA2_GPIO_config();
 
     //============ 片外外设 ============
     // LED灯组初始化
     bsp_leds_config();
-    Timer3_config();
     PD12_GPIO_config();
-
-    BUZZER_GPIO_config();
+    Timer3_config();
     // 按键初始化
     bsp_keys_config();
+    // 蜂鸣器初始化
+    bsp_buzzer_init();
 
     printf("============ start ============\n");
 
     int duty_percent = 100; // 当前占空比，单位 %
     int step = -1;          // 每次变化 1%
+
+    // 蜂鸣器测试
+    delay_1ms(1000);
+    bsp_buzzer_play(500);
+    delay_1ms(1000);
+    bsp_buzzer_play(1000);
+
+    // 停止
+    delay_1ms(1000);
+    bsp_buzzer_stop();
+    delay_1ms(1000);
+    bsp_buzzer_play(2000);
+    delay_1ms(1000);
+    bsp_buzzer_stop();
 
     while (1)
     {

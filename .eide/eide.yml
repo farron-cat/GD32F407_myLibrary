@@ -25,6 +25,7 @@ virtualFolder:
         - path: Driver/bsp_leds/bsp_leds.c
         - path: Driver/bsp_keys/bsp_keys.c
         - path: Driver/bsp_battery_flows/bsp_battery_flows.c
+        - path: Driver/bsp_buzzer/bsp_buzzer.c
       folders: []
     - name: Firmware
       files:
@@ -68,6 +69,7 @@ targets:
         - Driver/bsp_battery_flows
         - Hardware/msp_uart
         - Hardware/msp_exti
+        - Driver/bsp_buzzer
       libList: []
     excludeList: []
     settings:
