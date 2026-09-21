@@ -10,9 +10,15 @@
 #include "msp_uart.h"
 
 // TIMER5 全局4倍频  168000000hz <=> 1s
-// 预分频器 16800 => 10000hz <=> 1s
-#define PRESCALER 16800 - 1
-#define PERIOD 10000 - 1
+// 预分频器 1680 => 100000hz <=> 1s
+
+// PWM 周期1ms 占空比20% 0.2ms
+// 100000hz <=> 1s
+// 100hz <=> 1ms
+// 20hz <=> 0.2ms
+
+#define PRESCALER 1680 - 1
+#define PERIOD 20 - 1
 void Timer5_config(void)
 {
     // 1.打开外设时钟
@@ -37,13 +43,33 @@ void Timer5_config(void)
     timer_enable(TIMER5);
 }
 
+void PA2_GPIO_config(void)
+{
+    rcu_periph_clock_enable(RCU_GPIOA);
+    gpio_mode_set(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_2);
+    gpio_output_options_set(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_2);
+}
+
+uint8_t cnt = 0;
 void TIMER5_DAC_IRQHandler(void)
 {
     if (timer_interrupt_flag_get(TIMER5, TIMER_INT_UP) == SET)
     {
         timer_interrupt_flag_clear(TIMER5, TIMER_INT_UP);
 
-        printf("TIMER5\r\n");
+        if (cnt == 0)
+        {
+            gpio_bit_set(GPIOA, GPIO_PIN_2);
+            printf("1\n");
+        }
+        else
+        {
+            gpio_bit_reset(GPIOA, GPIO_PIN_2);
+            printf("0\n");
+        }
+        cnt = (cnt + 1) % 5;
+
+        // printf("TIMER5\r\n");
     }
 }
 
@@ -62,7 +88,8 @@ int main(void)
     // EXTI0 PA0 和 EXTI3 PC3初始化
     msp_exti_init();
     // TIMER5初始化
-    // Timer5_config();
+    Timer5_config();
+    PA2_GPIO_config();
 
     //============ 片外外设 ============
     // LED灯组初始化
