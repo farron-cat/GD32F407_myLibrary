@@ -1,5 +1,92 @@
 #include "bsp_buzzer.h"
 
+// ---------- 音名频率（C 大调，单位 Hz） ---------- */
+#define NOTE_REST 0
+#define NOTE_DO 524
+#define NOTE_RE 588
+#define NOTE_MI 660
+#define NOTE_FA 698
+#define NOTE_SOL 784
+#define NOTE_LA 880
+#define NOTE_SI 988
+#define NOTE_DO_H 1048 // 高音 do
+
+/* ---------- 节拍 ---------- */
+// 120 BPM：一拍 = 60/120 = 0.5s = 500000us
+#define BEAT_US 500000u
+// 音符之间留的间隔，避免连音
+#define NOTE_GAP_US 20000u
+
+/* ---------- 音符结构 ---------- */
+typedef struct
+{
+    uint16_t freq; // 频率，NOTE_REST 表示休止
+    uint8_t beats; // 拍数：1=四分音符，2=二分音符
+} note_t;
+
+/* ---------- 《小星星》简谱 ----------
+   1 1 5 5 | 6 6 5 - | 4 4 3 3 | 2 2 1 - |
+   5 5 4 4 | 3 3 2 - | 5 5 4 4 | 3 3 2 - |
+   1 1 5 5 | 6 6 5 - | 4 4 3 3 | 2 2 1 - |
+------------------------------------------ */
+static const note_t little_star[] = {
+    // 1 1 5 5 6 6 5 -
+    {NOTE_DO, 1},
+    {NOTE_DO, 1},
+    {NOTE_SOL, 1},
+    {NOTE_SOL, 1},
+    {NOTE_LA, 1},
+    {NOTE_LA, 1},
+    {NOTE_SOL, 2},
+
+    // 4 4 3 3 2 2 1 -
+    {NOTE_FA, 1},
+    {NOTE_FA, 1},
+    {NOTE_MI, 1},
+    {NOTE_MI, 1},
+    {NOTE_RE, 1},
+    {NOTE_RE, 1},
+    {NOTE_DO, 2},
+
+    // 5 5 4 4 3 3 2 -
+    {NOTE_SOL, 1},
+    {NOTE_SOL, 1},
+    {NOTE_FA, 1},
+    {NOTE_FA, 1},
+    {NOTE_MI, 1},
+    {NOTE_MI, 1},
+    {NOTE_RE, 2},
+
+    // 5 5 4 4 3 3 2 -
+    {NOTE_SOL, 1},
+    {NOTE_SOL, 1},
+    {NOTE_FA, 1},
+    {NOTE_FA, 1},
+    {NOTE_MI, 1},
+    {NOTE_MI, 1},
+    {NOTE_RE, 2},
+
+    // 1 1 5 5 6 6 5 -
+    {NOTE_DO, 1},
+    {NOTE_DO, 1},
+    {NOTE_SOL, 1},
+    {NOTE_SOL, 1},
+    {NOTE_LA, 1},
+    {NOTE_LA, 1},
+    {NOTE_SOL, 2},
+
+    // 4 4 3 3 2 2 1 -
+    {NOTE_FA, 1},
+    {NOTE_FA, 1},
+    {NOTE_MI, 1},
+    {NOTE_MI, 1},
+    {NOTE_RE, 1},
+    {NOTE_RE, 1},
+    {NOTE_DO, 2},
+};
+
+#define LITTLE_STAR_LEN (sizeof(little_star) / sizeof(little_star[0]))
+
 // TIMER1 全局4倍频  168000000hz <=> 1s
 // 预分频器 168 => 1000000hz <=> 1s
 // PWM 周期1ms 占空比20% 0.2ms
@@ -81,4 +168,55 @@ void bsp_buzzer_stop(void)
     // 关闭通道输出
     ocpara.outputstate = (uint16_t)TIMER_CCX_DISABLE;
     timer_channel_output_config(TIMER1, TIMER_CH_1, &ocpara);
+}
+
+/* ---------- 全局停止标志 ---------- */
+static volatile uint8_t song_stop_flag = 0;
+
+static void wait_us(uint64_t us)
+{
+    uint64_t start = get_us_cnt();
+    while ((get_us_cnt() - start) < us)
+    {
+        if (song_stop_flag)
+            return; // 支持中途停止
+    }
+}
+
+/* ---------- 播放整首歌 ---------- */
+void bsp_buzzer_play_little_star(void)
+{
+    song_stop_flag = 0;
+
+    for (uint32_t i = 0; i < LITTLE_STAR_LEN; i++)
+    {
+        if (song_stop_flag)
+            break;
+
+        uint16_t freq = little_star[i].freq;
+        uint32_t beats = little_star[i].beats;
+        uint64_t dur_us = (uint64_t)BEAT_US * beats;
+
+        if (freq == NOTE_REST)
+        {
+            bsp_buzzer_stop();
+            wait_us(dur_us);
+        }
+        else
+        {
+            bsp_buzzer_play(freq);
+            wait_us(dur_us);
+            bsp_buzzer_stop();
+            wait_us(NOTE_GAP_US); // 音符间隙
+        }
+    }
+
+    bsp_buzzer_stop();
+}
+
+/* ---------- 中途停止 ---------- */
+void bsp_buzzer_stop_song(void)
+{
+    song_stop_flag = 1;
+    bsp_buzzer_stop();
 }

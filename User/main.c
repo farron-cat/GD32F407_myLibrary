@@ -88,44 +88,47 @@ int main(void)
     bsp_buzzer_init();
 
     printf("============ start ============\n");
+    printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
+    printf("RCU_CFG1 = 0x%08X\r\n", RCU_CFG1);
 
     int duty_percent = 100; // 当前占空比，单位 %
     int step = -1;          // 每次变化 1%
 
-    // 蜂鸣器测试
-    delay_1ms(1000);
-    bsp_buzzer_play(500);
-    delay_1ms(1000);
-    bsp_buzzer_play(1000);
+    // // 蜂鸣器测试
+    // delay_1ms(1000);
+    // bsp_buzzer_play(500);
+    // delay_1ms(1000);
+    // bsp_buzzer_play(1000);
 
-    // 停止
-    delay_1ms(1000);
-    bsp_buzzer_stop();
-    delay_1ms(1000);
-    bsp_buzzer_play(2000);
-    delay_1ms(1000);
-    bsp_buzzer_stop();
+    // // 停止
+    // delay_1ms(1000);
+    // bsp_buzzer_stop();
+    // delay_1ms(1000);
+    // bsp_buzzer_play(2000);
+    // delay_1ms(1000);
+    // bsp_buzzer_stop();
 
     while (1)
     {
-        // 计算比较值：CCR = (ARR+1) * duty% / 100
-        uint16_t ccr = (uint16_t)(((uint32_t)(PERIOD + 1) * duty_percent) / 100);
-        timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, ccr);
-        timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_3, ccr);
+        // // 计算比较值：CCR = (ARR+1) * duty% / 100
+        // uint16_t ccr = (uint16_t)(((uint32_t)(PERIOD + 1) * duty_percent) / 100);
+        // timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, ccr);
 
-        delay_1ms(10); // 每 10ms 变一次，90 步约 0.9 秒一个来回
+        // delay_1ms(10); // 每 10ms 变一次，90 步约 0.9 秒一个来回
 
-        duty_percent += step;
+        // duty_percent += step;
 
-        if (duty_percent <= 10)
-        {
-            duty_percent = 10;
-            step = 1; // 到达 10% 后反向增加
-        }
-        else if (duty_percent >= 100)
-        {
-            duty_percent = 100;
-            step = -1; // 到达 100% 后反向减少
-        }
+        // if (duty_percent <= 10)
+        // {
+        //     duty_percent = 10;
+        //     step = 1; // 到达 10% 后反向增加
+        // }
+        // else if (duty_percent >= 100)
+        // {
+        //     duty_percent = 100;
+        //     step = -1; // 到达 100% 后反向减少
+        // }
+
+        bsp_buzzer_play_little_star();
     }
 }
