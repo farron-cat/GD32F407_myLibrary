@@ -5,6 +5,7 @@
 
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
+#include "bsp_digital_leds.h"
 #include "bsp_keys.h"
 #include "bsp_leds.h"
 #include "msp_exti.h"
@@ -86,6 +87,8 @@ int main(void)
     bsp_keys_config();
     // 蜂鸣器初始化
     bsp_buzzer_init();
+    // 数码管初始化
+    bsp_digital_leds_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -108,27 +111,45 @@ int main(void)
     // delay_1ms(1000);
     // bsp_buzzer_stop();
 
+    send_code_to_buffer(SEG_1, 0);
+    send_code_to_buffer(SEG_1, 1);
+    send_code_to_buffer(SEG_1, 2);
+    send_code_to_buffer(SEG_1, 3);
+    send_code_to_buffer(SEG_1, 4);
+    send_code_to_buffer(SEG_1, 5);
+    send_code_to_buffer(SEG_1, 6);
+    send_code_to_buffer(SEG_1, 7);
+
+    uint64_t last_cnt = 0;
+
     while (1)
     {
-        // // 计算比较值：CCR = (ARR+1) * duty% / 100
-        // uint16_t ccr = (uint16_t)(((uint32_t)(PERIOD + 1) * duty_percent) / 100);
-        // timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, ccr);
+        // 计算比较值：CCR = (ARR+1) * duty% / 100
+        uint16_t ccr = (uint16_t)(((uint32_t)(PERIOD + 1) * duty_percent) / 100);
+        timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, ccr);
 
-        // delay_1ms(10); // 每 10ms 变一次，90 步约 0.9 秒一个来回
+        uint64_t cnt = get_us_cnt();
 
-        // duty_percent += step;
+        if (cnt - last_cnt >= 10000)
+        {
+            last_cnt = cnt;
 
-        // if (duty_percent <= 10)
-        // {
-        //     duty_percent = 10;
-        //     step = 1; // 到达 10% 后反向增加
-        // }
-        // else if (duty_percent >= 100)
-        // {
-        //     duty_percent = 100;
-        //     step = -1; // 到达 100% 后反向减少
-        // }
+            duty_percent += step;
 
-        bsp_buzzer_play_little_star();
+            if (duty_percent <= 10)
+            {
+                duty_percent = 10;
+                step = 1; // 到达 10% 后反向增加
+            }
+            else if (duty_percent >= 100)
+            {
+                duty_percent = 100;
+                step = -1; // 到达 100% 后反向减少
+            }
+        }
+
+        // bsp_buzzer_play_little_star();
+
+        bsp_digital_leds_scan();
     }
 }
