@@ -10,8 +10,21 @@
 #include "msp_exti.h"
 #include "msp_uart.h"
 
-uint8_t arr1[4] = {1, 2, 3, 4};
-uint8_t arr2[4] = {0};
+uint8_t dat[1024] = {0};
+
+void on_usart_recv(USART_HandleTypeDef *huart)
+{
+    huart->recv_buff[huart->recv_length] = '\0';
+    if (huart->usartx == USART0)
+    {
+        printf("usart0_recv:%s\n", huart->recv_buff);
+        // 配置剩余参数
+        dma_periph_address_config(DMA1, DMA_CH0, (uint32_t)huart->recv_buff);
+        dma_transfer_number_config(DMA1, DMA_CH0, huart->recv_length);
+        // 启动DMA传输
+        dma_channel_enable(DMA1, DMA_CH0);
+    }
+}
 
 void DMA_m2m_config(void)
 {
@@ -22,11 +35,11 @@ void DMA_m2m_config(void)
     dma_single_data_para_struct_init(&init_struct);
 
     init_struct.direction = DMA_MEMORY_TO_MEMORY;
-    init_struct.periph_addr = (uint32_t)arr1;
-    init_struct.memory0_addr = (uint32_t)arr2;
+    // init_struct.periph_addr = ？？;
+    init_struct.memory0_addr = (uint32_t)dat;
 
     init_struct.periph_memory_width = DMA_PERIPH_WIDTH_8BIT;
-    init_struct.number = 4U;
+    // init_struct.number = ？？;
 
     init_struct.periph_inc = DMA_PERIPH_INCREASE_ENABLE;
     init_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
@@ -36,14 +49,14 @@ void DMA_m2m_config(void)
     dma_single_data_mode_init(DMA1, DMA_CH0, &init_struct);
 
     // 配置中断
-    nvic_irq_enable(DMA1_Channel0_IRQn, 0, 0);
+    nvic_irq_enable(DMA1_Channel0_IRQn, 2, 2);
     // 清理标志位
     dma_interrupt_flag_clear(DMA1, DMA_CH0, DMA_INT_FLAG_FTF);
     // 开启传输完成中断
     dma_interrupt_enable(DMA1, DMA_CH0, DMA_INT_FTF);
 
     // 3.启动DMA传输
-    dma_channel_enable(DMA1, DMA_CH0);
+    // dma_channel_enable(DMA1, DMA_CH0); // 没有配置好还不能启动
 }
 
 void DMA1_Channel0_IRQHandler(void)
@@ -53,10 +66,7 @@ void DMA1_Channel0_IRQHandler(void)
         // 清标志位
         dma_interrupt_flag_clear(DMA1, DMA_CH0, DMA_INT_FLAG_FTF);
 
-        for (uint8_t i = 0; i < sizeof(arr2) / sizeof(arr2[0]); i++)
-        {
-            printf("arr[%d]=%d\n", (int)i, (int)arr2[i]);
-        }
+        printf("dat:%s\n", dat);
 
         // 关闭DMA
         dma_channel_disable(DMA1, DMA_CH0);
@@ -88,11 +98,6 @@ int main(void)
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
-
-    for (uint8_t i = 0; i < sizeof(arr2) / sizeof(arr2[0]); i++)
-    {
-        printf("arr[%d]=%d\n", (int)i, (int)arr2[i]);
-    }
 
     // DMA搬运
     DMA_m2m_config();
