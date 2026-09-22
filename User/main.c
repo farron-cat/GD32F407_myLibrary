@@ -10,99 +10,33 @@
 #include "msp_exti.h"
 #include "msp_uart.h"
 
-// PA02 TIMER1 CH2
-// PD12 TIMER3 CH0
-// PD13 TIMER3 CH1
-// PD14 TIMER3 CH2
-// PD15 TIMER3 CH3
+uint8_t arr1[4] = {1, 2, 3, 4};
+uint8_t arr2[4] = {0};
 
-// TIMER1 全局4倍频  168000000hz <=> 1s
-// 预分频器 1680 => 100000hz <=> 1s
-
-// PWM 周期1ms 占空比20% 0.2ms
-// 100000hz <=> 1s
-// 100hz <=> 1ms
-// 20hz <=> 0.2ms
-
-#define PRESCALER 1680 - 1
-#define PERIOD (SystemCoreClock / (PRESCALER + 1) / 1000) - 1
-
-void Timer3_config(void)
+void DMA_m2m_config(void)
 {
-    // 1.打开外设时钟
-    rcu_periph_clock_enable(RCU_TIMER3);
+    // 1.开启外设时钟
+    rcu_periph_clock_enable(RCU_DMA1); // 只有DMA1支持m2m
+    // 2.配置DMA
+    dma_single_data_parameter_struct init_struct;
+    dma_single_data_para_struct_init(&init_struct);
 
-    // 2.初始化定时器
-    timer_parameter_struct timer_init_struct;
-    timer_struct_para_init(&timer_init_struct);
-    timer_init_struct.prescaler = PRESCALER; // 定时器时钟预分频
-    timer_init_struct.period = PERIOD;       // 定时器周期
+    init_struct.direction = DMA_MEMORY_TO_MEMORY;
+    init_struct.periph_addr = (uint32_t)arr1;
+    init_struct.memory0_addr = (uint32_t)arr2;
 
-    timer_init(TIMER3, &timer_init_struct);
+    init_struct.periph_memory_width = DMA_PERIPH_WIDTH_8BIT;
+    init_struct.number = 4U;
 
-    // 3.配置PWM输出通道
-    timer_oc_parameter_struct ocpara;
-    timer_channel_output_struct_para_init(&ocpara);
-    ocpara.outputstate = (uint16_t)TIMER_CCX_ENABLE; // 打开通道输出
-    timer_channel_output_config(TIMER3, TIMER_CH_0, &ocpara);
-    timer_channel_output_config(TIMER3, TIMER_CH_3, &ocpara);
+    init_struct.periph_inc = DMA_PERIPH_INCREASE_ENABLE;
+    init_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
+    init_struct.circular_mode = DMA_CIRCULAR_MODE_DISABLE;
+    init_struct.priority = DMA_PRIORITY_LOW;
 
-    // 4.输出模式配置
-    timer_channel_output_mode_config(TIMER3, TIMER_CH_0, TIMER_OC_MODE_PWM0);
-    // 5.设置占空比
-    timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, (PERIOD + 1) * 0.5);
-    // 6.使能定时器
-    timer_enable(TIMER3);
-}
+    dma_single_data_mode_init(DMA1, DMA_CH0, &init_struct);
 
-void Timer0_config(void)
-{
-    // 1.打开外设时钟
-    rcu_periph_clock_enable(RCU_TIMER0);
-
-    // 2.初始化定时器
-    timer_parameter_struct timer_init_struct;
-    timer_struct_para_init(&timer_init_struct);
-    timer_init_struct.prescaler = PRESCALER; // 定时器时钟预分频
-    timer_init_struct.period = PERIOD;       // 定时器周期
-
-    timer_init(TIMER0, &timer_init_struct);
-
-    // 3.配置PWM输出通道
-    timer_oc_parameter_struct ocpara;
-    timer_channel_output_struct_para_init(&ocpara);
-
-    ocpara.outputstate = (uint16_t)TIMER_CCX_ENABLE; // 打开通道输出
-    ocpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
-    ocpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
-
-    ocpara.outputnstate = TIMER_CCXN_ENABLE;
-    ocpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
-    ocpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
-
-    timer_channel_output_config(TIMER0, TIMER_CH_0, &ocpara);
-
-    // 4.输出模式配置
-    timer_channel_output_mode_config(TIMER0, TIMER_CH_0, TIMER_OC_MODE_PWM0);
-    // 5.设置占空比
-    timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, (PERIOD + 1) * 0.5);
-    // 6.使能定时器
-    timer_primary_output_config(TIMER0, ENABLE);
-    timer_enable(TIMER0);
-}
-
-void PD12_GPIO_config(void)
-{
-    rcu_periph_clock_enable(RCU_GPIOD);
-    gpio_mode_set(GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_12);
-    gpio_af_set(GPIOD, GPIO_AF_2, GPIO_PIN_12);
-}
-
-void PE89_GPIO_config(void)
-{
-    rcu_periph_clock_enable(RCU_GPIOE);
-    gpio_mode_set(GPIOE, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_8 | GPIO_PIN_9);
-    gpio_af_set(GPIOE, GPIO_AF_1, GPIO_PIN_8 | GPIO_PIN_9);
+    // 3.启动DMA传输
+    dma_channel_enable(DMA1, DMA_CH0);
 }
 
 int main(void)
@@ -120,14 +54,9 @@ int main(void)
     // EXTI0 PA0 和 EXTI3 PC3初始化
     msp_exti_init();
 
-    Timer0_config();
-    PE89_GPIO_config();
-
     //============ 片外外设 ============
     // LED灯组初始化
     bsp_leds_config();
-    PD12_GPIO_config();
-    Timer3_config();
     // 按键初始化
     bsp_keys_config();
     // 蜂鸣器初始化
@@ -135,46 +64,25 @@ int main(void)
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
-    printf("RCU_CFG1 = 0x%08X\r\n", RCU_CFG1);
+
+    for (uint8_t i = 0; i < sizeof(arr2) / sizeof(arr2[0]); i++)
+    {
+        printf("arr[%d]=%d\n", (int)i, (int)arr2[i]);
+    }
+
+    // DMA搬运
+    DMA_m2m_config();
+    delay_1ms(1);
+
+    for (uint8_t i = 0; i < sizeof(arr2) / sizeof(arr2[0]); i++)
+    {
+        printf("arr[%d]=%d\n", (int)i, (int)arr2[i]);
+    }
 
     int duty_percent = 100; // 当前占空比，单位 %
     int step = -1;          // 每次变化 1%
 
-    // // 蜂鸣器测试
-    // delay_1ms(1000);
-    // bsp_buzzer_play(500);
-    // delay_1ms(1000);
-    // bsp_buzzer_play(1000);
-
-    // // 停止
-    // delay_1ms(1000);
-    // bsp_buzzer_stop();
-    // delay_1ms(1000);
-    // bsp_buzzer_play(2000);
-    // delay_1ms(1000);
-    // bsp_buzzer_stop();
-
     while (1)
     {
-        // // 计算比较值：CCR = (ARR+1) * duty% / 100
-        // uint16_t ccr = (uint16_t)(((uint32_t)(PERIOD + 1) * duty_percent) / 100);
-        // timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, ccr);
-
-        // delay_1ms(10); // 每 10ms 变一次，90 步约 0.9 秒一个来回
-
-        // duty_percent += step;
-
-        // if (duty_percent <= 10)
-        // {
-        //     duty_percent = 10;
-        //     step = 1; // 到达 10% 后反向增加
-        // }
-        // else if (duty_percent >= 100)
-        // {
-        //     duty_percent = 100;
-        //     step = -1; // 到达 100% 后反向减少
-        // }
-
-        // bsp_buzzer_play_little_star();
     }
 }
