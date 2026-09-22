@@ -55,11 +55,54 @@ void Timer3_config(void)
     timer_enable(TIMER3);
 }
 
+void Timer0_config(void)
+{
+    // 1.打开外设时钟
+    rcu_periph_clock_enable(RCU_TIMER0);
+
+    // 2.初始化定时器
+    timer_parameter_struct timer_init_struct;
+    timer_struct_para_init(&timer_init_struct);
+    timer_init_struct.prescaler = PRESCALER; // 定时器时钟预分频
+    timer_init_struct.period = PERIOD;       // 定时器周期
+
+    timer_init(TIMER0, &timer_init_struct);
+
+    // 3.配置PWM输出通道
+    timer_oc_parameter_struct ocpara;
+    timer_channel_output_struct_para_init(&ocpara);
+
+    ocpara.outputstate = (uint16_t)TIMER_CCX_ENABLE; // 打开通道输出
+    ocpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
+    ocpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
+
+    ocpara.outputnstate = TIMER_CCXN_ENABLE;
+    ocpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
+    ocpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
+
+    timer_channel_output_config(TIMER0, TIMER_CH_0, &ocpara);
+
+    // 4.输出模式配置
+    timer_channel_output_mode_config(TIMER0, TIMER_CH_0, TIMER_OC_MODE_PWM0);
+    // 5.设置占空比
+    timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, (PERIOD + 1) * 0.5);
+    // 6.使能定时器
+    timer_primary_output_config(TIMER0, ENABLE);
+    timer_enable(TIMER0);
+}
+
 void PD12_GPIO_config(void)
 {
     rcu_periph_clock_enable(RCU_GPIOD);
     gpio_mode_set(GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_12);
     gpio_af_set(GPIOD, GPIO_AF_2, GPIO_PIN_12);
+}
+
+void PE89_GPIO_config(void)
+{
+    rcu_periph_clock_enable(RCU_GPIOE);
+    gpio_mode_set(GPIOE, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_8 | GPIO_PIN_9);
+    gpio_af_set(GPIOE, GPIO_AF_1, GPIO_PIN_8 | GPIO_PIN_9);
 }
 
 int main(void)
@@ -76,6 +119,9 @@ int main(void)
     msp_uart_init();
     // EXTI0 PA0 和 EXTI3 PC3初始化
     msp_exti_init();
+
+    Timer0_config();
+    PE89_GPIO_config();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -129,6 +175,6 @@ int main(void)
         //     step = -1; // 到达 100% 后反向减少
         // }
 
-        bsp_buzzer_play_little_star();
+        // bsp_buzzer_play_little_star();
     }
 }
