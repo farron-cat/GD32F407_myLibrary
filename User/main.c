@@ -35,8 +35,32 @@ void DMA_m2m_config(void)
 
     dma_single_data_mode_init(DMA1, DMA_CH0, &init_struct);
 
+    // 配置中断
+    nvic_irq_enable(DMA1_Channel0_IRQn, 0, 0);
+    // 清理标志位
+    dma_interrupt_flag_clear(DMA1, DMA_CH0, DMA_INT_FLAG_FTF);
+    // 开启传输完成中断
+    dma_interrupt_enable(DMA1, DMA_CH0, DMA_INT_FTF);
+
     // 3.启动DMA传输
     dma_channel_enable(DMA1, DMA_CH0);
+}
+
+void DMA1_Channel0_IRQHandler(void)
+{
+    if (dma_interrupt_flag_get(DMA1, DMA_CH0, DMA_INT_FLAG_FTF) == SET)
+    {
+        // 清标志位
+        dma_interrupt_flag_clear(DMA1, DMA_CH0, DMA_INT_FLAG_FTF);
+
+        for (uint8_t i = 0; i < sizeof(arr2) / sizeof(arr2[0]); i++)
+        {
+            printf("arr[%d]=%d\n", (int)i, (int)arr2[i]);
+        }
+
+        // 关闭DMA
+        dma_channel_disable(DMA1, DMA_CH0);
+    }
 }
 
 int main(void)
@@ -72,15 +96,6 @@ int main(void)
 
     // DMA搬运
     DMA_m2m_config();
-    delay_1ms(1);
-
-    for (uint8_t i = 0; i < sizeof(arr2) / sizeof(arr2[0]); i++)
-    {
-        printf("arr[%d]=%d\n", (int)i, (int)arr2[i]);
-    }
-
-    int duty_percent = 100; // 当前占空比，单位 %
-    int step = -1;          // 每次变化 1%
 
     while (1)
     {
