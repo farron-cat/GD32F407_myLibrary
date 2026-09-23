@@ -1,21 +1,33 @@
 #include "bsp_keypad.h"
 
+/* 扫描相位后的稳定延时（us）
+   行/列释放后要靠内部上拉（典型几十 kΩ）把线拉高，
+   与排线+键盘的寄生电容（约 50~150pF）形成数 us 的上升时间，
+   2us 往往还没越过输入门限，会把"未升上去的线"误判成按下。
+   若后续在硬件上加了 4.7k~10k 外部上拉，可适当减小该值。 */
+#define KP_SETTLE_US 20
+
 void bsp_keypad_init(void)
 {
     rcu_periph_clock_enable(KP_RCU);
 
+    /* 准双向口：输出 + 开漏 + 内部上拉
+       写 0 -> 输出级把引脚真正拉低
+       写 1 -> 输出级关断（高阻），由内部上拉拉高
+       注意：必须是 GPIO_MODE_OUTPUT，输入模式下输出级关闭，
+             引脚只是悬空，写 0 拉不低、写 1 也拉不高。 */
     gpio_mode_set(KP_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, KP_ALL_PINS);
-    gpio_output_options_set(KP_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, KP_ALL_PINS);
+    gpio_output_options_set(KP_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, KP_ALL_PINS);
 
-    /* 默认全部拉高（高阻 + 上拉） */
+    /* 默认全部释放（外部/内部上拉拉高） */
     gpio_bit_set(KP_PORT, KP_ALL_PINS);
 }
 
-unsigned char KeypadScanHex(void)
+uint8_t KeypadScanHex(void)
 {
-    unsigned char scaned_key_col;
-    unsigned char scaned_key_row;
-    unsigned char scaned_key_hex = 0xFF;
+    uint8_t scaned_key_col;
+    uint8_t scaned_key_row;
+    uint8_t scaned_key_hex = 0xFF;
 
     /* ---- 列检测：行全低，列全高阻(上拉) ---- */
     KROW1_L();
@@ -27,9 +39,9 @@ unsigned char KeypadScanHex(void)
     KCOL3_H();
     KCOL4_H();
 
-    KeypadDelayUs(2);
+    delay_1us(KP_SETTLE_US);
 
-    scaned_key_col = ((unsigned char)KCOL1_READ() << 0) | ((unsigned char)KCOL2_READ() << 1) | ((unsigned char)KCOL3_READ() << 2) | ((unsigned char)KCOL4_READ() << 3);
+    scaned_key_col = ((uint8_t)KCOL1_READ() << 0) | ((uint8_t)KCOL2_READ() << 1) | ((uint8_t)KCOL3_READ() << 2) | ((unsigned char)KCOL4_READ() << 3);
 
     if (scaned_key_col != 0x0F)
     {
@@ -43,9 +55,9 @@ unsigned char KeypadScanHex(void)
         KROW3_H();
         KROW4_H();
 
-        KeypadDelayUs(2);
+        delay_1us(KP_SETTLE_US);
 
-        scaned_key_row = ((unsigned char)KROW1_READ() << 0) | ((unsigned char)KROW2_READ() << 1) | ((unsigned char)KROW3_READ() << 2) | ((unsigned char)KROW4_READ() << 3);
+        scaned_key_row = ((uint8_t)KROW1_READ() << 0) | ((uint8_t)KROW2_READ() << 1) | ((uint8_t)KROW3_READ() << 2) | ((unsigned char)KROW4_READ() << 3);
 
         scaned_key_hex = (scaned_key_col << 4) | scaned_key_row;
     }
@@ -53,7 +65,7 @@ unsigned char KeypadScanHex(void)
     return scaned_key_hex;
 }
 
-unsigned char KeypadHexCodeRemap(unsigned char hex_code)
+uint8_t KeypadHexCodeRemap(uint8_t hex_code)
 {
     switch (hex_code)
     {
@@ -96,4 +108,10 @@ unsigned char KeypadHexCodeRemap(unsigned char hex_code)
     default:
         return 0xFF;
     }
+}
+
+unsigned char KeypadScan(void)
+{
+    uint8_t hex = KeypadScanHex();
+    return KeypadHexCodeRemap(hex);
 }

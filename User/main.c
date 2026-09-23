@@ -5,6 +5,7 @@
 
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
+#include "bsp_keypad.h"
 #include "bsp_keys.h"
 #include "bsp_leds.h"
 #include "msp_exti.h"
@@ -86,6 +87,8 @@ int main(void)
     bsp_keys_config();
     // 蜂鸣器初始化
     bsp_buzzer_init();
+    // 矩阵键盘初始化
+    bsp_keypad_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -129,6 +132,9 @@ int main(void)
         //     step = -1; // 到达 100% 后反向减少
         // }
 
-        bsp_buzzer_play_little_star();
+        // bsp_buzzer_play_little_star();
+        int key = KeypadScan();
+        if (key != 255)
+            printf("key: %d\n", key);
     }
 }

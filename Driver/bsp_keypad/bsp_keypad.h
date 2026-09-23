@@ -2,6 +2,7 @@
 #define BSP_KEYPAD_H
 
 #include "gd32f4xx.h"
+#include "systick.h"
 
 /* 键盘统一挂在 GPIOE */
 #define KP_PORT GPIOE
@@ -51,5 +52,13 @@
 #define KCOL2_READ() gpio_input_bit_get(KP_PORT, KCOL2_PIN)
 #define KCOL3_READ() gpio_input_bit_get(KP_PORT, KCOL3_PIN)
 #define KCOL4_READ() gpio_input_bit_get(KP_PORT, KCOL4_PIN)
+
+void bsp_keypad_init(void);
+
+uint8_t KeypadScanHex(void);
+
+uint8_t KeypadHexCodeRemap(uint8_t hex_code);
+
+unsigned char KeypadScan(void);
 
 #endif // BSP_KEYPAD_H
