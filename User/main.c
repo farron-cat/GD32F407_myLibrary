@@ -111,14 +111,20 @@ int main(void)
     // delay_1ms(1000);
     // bsp_buzzer_stop();
 
-    send_code_to_buffer(SEG_1, 0);
-    send_code_to_buffer(SEG_1, 1);
-    send_code_to_buffer(SEG_1, 2);
-    send_code_to_buffer(SEG_1, 3);
-    send_code_to_buffer(SEG_1, 4);
-    send_code_to_buffer(SEG_1, 5);
-    send_code_to_buffer(SEG_1, 6);
-    send_code_to_buffer(SEG_1, 7);
+    // 共阳段码表，索引 0~9
+    const uint8_t seg_tab[10] = {
+        SEG_0, SEG_1, SEG_2, SEG_3, SEG_4,
+        SEG_5, SEG_6, SEG_7, SEG_8, SEG_9};
+
+    uint16_t number = 0;   // 当前显示的数字
+    uint32_t ms_count = 0; // 毫秒计数
+
+    // 先刷新一次缓冲区，让数码管上电就显示 0000
+    clear_buffer();
+    send_code_to_buffer(seg_tab[0], 0); // 千位
+    send_code_to_buffer(seg_tab[0], 1); // 百位
+    send_code_to_buffer(seg_tab[0], 2); // 十位
+    send_code_to_buffer(seg_tab[0], 3); // 个位
 
     uint64_t last_cnt = 0;
 
@@ -151,5 +157,7 @@ int main(void)
         // bsp_buzzer_play_little_star();
 
         bsp_digital_leds_scan();
+
+        bsp_digital_leds_test_tick();
     }
 }

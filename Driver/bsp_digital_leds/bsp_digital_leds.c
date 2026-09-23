@@ -28,6 +28,11 @@ const unsigned char digCodeTable[DIG_NUM] =
         DIG_7, /* position 6 → 第 7 位 */
         DIG_8, /* position 7 → 第 8 位 */
 };
+// 共阳段码表，索引 0~9
+const uint8_t seg_tab[10] =
+    {
+        SEG_0, SEG_1, SEG_2, SEG_3, SEG_4,
+        SEG_5, SEG_6, SEG_7, SEG_8, SEG_9};
 
 void bsp_digital_leds_init(void)
 {
@@ -120,5 +125,47 @@ void bsp_digital_leds_scan(void)
         RCLK_L();
 
         position = (position + 1) % DIG_NUM;
+    }
+}
+
+// 每 1 秒返回一次 1
+uint8_t bsp_digital_leds_is_1s(void)
+{
+    static uint64_t last_cnt = 0;
+    uint64_t cnt = get_us_cnt();
+
+    if (cnt - last_cnt >= 1000000ULL) // 1,000,000 us = 1 s
+    {
+        last_cnt = cnt;
+        return 1;
+    }
+    return 0;
+}
+
+// 把 0~9999 的数字显示到 4 位数码管
+void bsp_digital_leds_show_number(uint16_t num)
+{
+    if (num > 9999)
+        num = 9999;
+
+    send_code_to_buffer(seg_tab[(num / 1000) % 10], 4); // 千位
+    send_code_to_buffer(seg_tab[(num / 100) % 10], 5);  // 百位
+    send_code_to_buffer(seg_tab[(num / 10) % 10], 6);   // 十位
+    send_code_to_buffer(seg_tab[num % 10], 7);          // 个位
+}
+
+// 数码管测试：每 1 秒加 1
+void bsp_digital_leds_test_tick(void)
+{
+    static uint16_t number = 0;
+
+    if (bsp_digital_leds_is_1s())
+    {
+        number++;
+        if (number > 9999)
+        {
+            number = 0;
+        }
+        bsp_digital_leds_show_number(number);
     }
 }

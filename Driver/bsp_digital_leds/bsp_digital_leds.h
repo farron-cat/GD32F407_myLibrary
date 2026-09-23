@@ -61,4 +61,10 @@ void clear_buffer(void);
 
 void bsp_digital_leds_scan(void);
 
+uint8_t bsp_digital_leds_is_1s(void);
+
+void bsp_digital_leds_show_number(uint16_t num);
+
+void bsp_digital_leds_test_tick(void);
+
 #endif // BSP_DIGITAL_LEDS_H
