@@ -71,3 +71,5 @@ desktop.ini
 # 忽略编译生成的 .lst、.map 等已在上面涵盖
 # 忽略 clang-format 缓存（如有）
 .clang-format.cache
+
+.workbuddy
