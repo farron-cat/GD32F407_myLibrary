@@ -120,24 +120,6 @@ void msp_rtc_config(void)
         return;
     }
     printf("rtc_register_sync_wait ok\n");
-
-    // 初始化RTC
-    // rtc_parameter_struct rtc_init_struct;
-    // // f_rct_clock/(f_a +1)/(f_s+1) = 320000
-    // // 异步预分频尽可能大
-    // rtc_init_struct.factor_asyn = 0x7f;  /*!< RTC asynchronous prescaler value: 0x0 - 0x7F */
-    // rtc_init_struct.factor_syn = 0x09c3; /*!< RTC synchronous prescaler value: 0x0 - 0x7FFF */
-
-    // rtc_init_struct.year = 0x26;     /*!< RTC year value: 0x0 - 0x99(BCD format) */
-    // rtc_init_struct.month = 0x09;    /*!< RTC month value */
-    // rtc_init_struct.date = 0x24;     /*!< RTC date value: 0x1 - 0x31(BCD format) */
-    // rtc_init_struct.day_of_week = 4; /*!< RTC weekday value */
-    // rtc_init_struct.hour = 0x11;     /*!< RTC hour value */
-    // rtc_init_struct.minute = 0x59;   /*!< RTC minute value: 0x0 - 0x59(BCD format) */
-    // rtc_init_struct.second = 0x50;   /*!< RTC second value: 0x0 - 0x59(BCD format) */
-    // rtc_init_struct.am_pm = RTC_AM;  /*!< RTC AM/PM value */
-    // rtc_init_struct.display_format = RTC_24HOUR;
-    // rtc_init(&rtc_init_struct);
 }
 
 void msp_rtc_read(Time *time)
@@ -177,6 +159,47 @@ void msp_rtc_write(Time *time)
     rtc_init(&rtc_initpara_struct);
 }
 
+void msp_rtc_alarm_config(void)
+{
+    rtc_alarm_struct alarm_struct;
+    alarm_struct.alarm_mask = RTC_ALARM_DATE_MASK | RTC_ALARM_HOUR_MASK | RTC_ALARM_MINUTE_MASK; /*!< RTC alarm mask */
+    alarm_struct.weekday_or_date = RTC_ALARM_DATE_SELECTED;                                      /*!< specify RTC alarm is on date or weekday */
+    alarm_struct.alarm_day = 0x24;                                                               /*!< RTC alarm date or weekday value*/
+    alarm_struct.alarm_hour = 0x15;                                                              /*!< RTC alarm hour value */
+    alarm_struct.alarm_minute = 0x00;                                                            /*!< RTC alarm minute value: 0x0 - 0x59(BCD format) */
+    alarm_struct.alarm_second = 0x00;                                                            /*!< RTC alarm second value: 0x0 - 0x59(BCD format) */
+    alarm_struct.am_pm = RTC_AM;
+
+    rtc_alarm_config(RTC_ALARM0, &alarm_struct);
+
+    // 清标志位
+    rtc_flag_clear(RTC_FLAG_ALRM0);
+    exti_flag_clear(EXTI_17);
+    // 配置 NVIC 中断
+    nvic_irq_enable(RTC_Alarm_IRQn, 2, 2);
+    // 配置 EXTI 外部中断线
+    exti_init(EXTI_17, EXTI_INTERRUPT, EXTI_TRIG_RISING);
+    // 配置EXTI中断与使能
+    exti_interrupt_flag_clear(EXTI_17); // EXTI线编号17是RTC闹钟
+    exti_interrupt_enable(EXTI_17);
+    // 配置RTC闹钟中断与使能
+    rtc_flag_clear(RTC_FLAG_ALRM0);
+    rtc_interrupt_enable(RTC_INT_ALARM0);
+
+    rtc_alarm_enable(RTC_ALARM0);
+}
+
+// 闹钟中断处理函数
+void RTC_Alarm_IRQHandler()
+{
+    if (exti_interrupt_flag_get(EXTI_17) == SET)
+    {
+        exti_interrupt_flag_clear(EXTI_17);
+        rtc_flag_clear(RTC_FLAG_ALRM0);
+        printf("============ alarm ============\n");
+    }
+}
+
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -193,6 +216,7 @@ int main(void)
     msp_exti_init();
     // RTC
     msp_rtc_config();
+    msp_rtc_alarm_config();
     //============ 片外外设 ============
     // LED灯组初始化
     bsp_leds_config();
