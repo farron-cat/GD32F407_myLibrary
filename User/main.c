@@ -75,6 +75,30 @@ void DMA1_Channel0_IRQHandler(void)
     }
 }
 
+void msp_fwdgt_config(void)
+{
+    // 打开时钟
+    rcu_osci_off(RCU_IRC32K);
+    delay_1ms(1);
+    rcu_osci_on(RCU_IRC32K);
+
+    if (rcu_osci_stab_wait(RCU_IRC32K) == ERROR)
+    { // 等待稳定
+        printf("turn_on_osci_error\n");
+        return;
+    }
+
+    // 写使能
+    fwdgt_write_enable();
+    // 配置分频系数 32000 / 32 = 1000
+    fwdgt_prescaler_value_config(FWDGT_PSC_DIV32);
+    // 配置重装载值
+    fwdgt_reload_value_config(100);
+    // 启动看门狗
+    fwdgt_counter_reload();
+    fwdgt_enable();
+}
+
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -91,6 +115,8 @@ int main(void)
     msp_exti_init();
     // RTC
     msp_rtc_init(HXTAL);
+    // 独立看门狗
+    msp_fwdgt_config();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -125,14 +151,18 @@ int main(void)
     uint8_t cnt = 0;
     while (1)
     {
-        if (cnt == 50)
-        {
-            cnt = 0;
-            // 读取RTC
-            msp_rtc_read(&time);
-            printf("sec=%d, min=%d, hour=%d\n", (int)time.sec, (int)time.min, (int)time.hour);
-            printf("day=%d, week=%d, month=%d, year=%d\n", (int)time.day, (int)time.week, (int)time.month, (int)time.year);
-        }
+        // if (cnt == 50)
+        // {
+        //     cnt = 0;
+        //     // 读取RTC
+        //     msp_rtc_read(&time);
+        //     printf("sec=%d, min=%d, hour=%d\n", (int)time.sec, (int)time.min, (int)time.hour);
+        //     printf("day=%d, week=%d, month=%d, year=%d\n", (int)time.day, (int)time.week, (int)time.month, (int)time.year);
+        // }
+
+        // 喂狗
+        fwdgt_counter_reload();
+
         delay_1ms(20);
         cnt++;
     }

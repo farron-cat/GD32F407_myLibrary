@@ -39,6 +39,7 @@ virtualFolder:
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_dma.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_pmu.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_rtc.c
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_fwdgt.c
       folders: []
     - name: CMSIS
       files:
