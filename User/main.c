@@ -99,6 +99,23 @@ void msp_fwdgt_config(void)
     fwdgt_enable();
 }
 
+void msp_wwdgt_config(void)
+{
+    // 打开时钟
+    rcu_periph_clock_enable(RCU_WWDGT);
+    // 42mhz
+    // 42000000hz / 4096 = 10,253.90625hz
+    // 10,253.90625hz / 1 = 10,253.90625ms
+    // 10,253.90625hz <=> 1000000us
+    // 数1个数 <=> 97.523us
+    // 配置窗口看门狗属性
+    // 最短喂狗时间   47*97.5us = 4582.5us
+    // 最长喂狗时间   64*97.5us = 6241.5us
+    wwdgt_config(0x7F, 0x50, WWDGT_CFG_PSC_DIV1);
+    // 启动看门狗
+    wwdgt_enable();
+}
+
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -115,8 +132,6 @@ int main(void)
     msp_exti_init();
     // RTC
     msp_rtc_init(HXTAL);
-    // 独立看门狗
-    msp_fwdgt_config();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -148,22 +163,19 @@ int main(void)
     // 闹钟配置
     msp_rtc_alarm_config(&time);
 
+    // 独立看门狗
+    // msp_fwdgt_config();
+    // 窗口看门狗
+    msp_wwdgt_config(); // 前面的初始化会消耗时间
+
     uint8_t cnt = 0;
     while (1)
     {
-        // if (cnt == 50)
-        // {
-        //     cnt = 0;
-        //     // 读取RTC
-        //     msp_rtc_read(&time);
-        //     printf("sec=%d, min=%d, hour=%d\n", (int)time.sec, (int)time.min, (int)time.hour);
-        //     printf("day=%d, week=%d, month=%d, year=%d\n", (int)time.day, (int)time.week, (int)time.month, (int)time.year);
-        // }
+        delay_1ms(5);
 
         // 喂狗
-        fwdgt_counter_reload();
+        wwdgt_counter_update(0x7F);
 
-        delay_1ms(20);
         cnt++;
     }
 }
