@@ -8,6 +8,7 @@
 #include "bsp_keys.h"
 #include "bsp_leds.h"
 #include "msp_exti.h"
+#include "msp_iic.h"
 #include "msp_rtc.h"
 #include "msp_uart.h"
 
@@ -132,6 +133,8 @@ int main(void)
     msp_exti_init();
     // RTC
     msp_rtc_init(HXTAL);
+    // IIC
+    msp_iic_config();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -144,29 +147,43 @@ int main(void)
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
 
-    // DMA搬运
-    DMA_m2m_config();
+    // // DMA搬运
+    // DMA_m2m_config();
 
-    time.year = 2026;
-    time.month = 9;
-    time.day = 24;
-    time.week = 4;
-    time.hour = 14;
-    time.min = 59;
-    time.sec = 55;
-    msp_rtc_write(&time);
+    // time.year = 2026;
+    // time.month = 9;
+    // time.day = 24;
+    // time.week = 4;
+    // time.hour = 14;
+    // time.min = 59;
+    // time.sec = 55;
+    // msp_rtc_write(&time);
 
-    time.day = 24;
-    time.hour = 15;
-    time.min = 0;
-    time.sec = 0;
-    // 闹钟配置
-    msp_rtc_alarm_config(&time);
+    // time.day = 24;
+    // time.hour = 15;
+    // time.min = 0;
+    // time.sec = 0;
+    // // 闹钟配置
+    // msp_rtc_alarm_config(&time);
 
     // 独立看门狗
     // msp_fwdgt_config();
     // 窗口看门狗
-    msp_wwdgt_config(); // 前面的初始化会消耗时间
+    // msp_wwdgt_config(); // 前面的初始化会消耗时间
+
+#define PCF8563_ADDR 0x51
+
+    uint8_t dat[7] = {0};
+
+    dat[0] = 0x55; // 0x37
+    dat[1] = 0x59;
+    dat[2] = 0x23;
+    dat[3] = 0x26;
+    dat[4] = 6;
+    dat[5] = 0x09 | (1 << 7);
+    dat[6] = 0x26;
+
+    msp_iic_write_nbyte(PCF8563_ADDR, 0x02, dat, 7);
 
     uint8_t cnt = 0;
     while (1)
@@ -174,7 +191,7 @@ int main(void)
         delay_1ms(5);
 
         // 喂狗
-        wwdgt_counter_update(0x7F);
+        // wwdgt_counter_update(0x7F);
 
         cnt++;
     }
