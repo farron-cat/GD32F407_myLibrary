@@ -49,6 +49,7 @@ virtualFolder:
       files:
         - path: Hardware/msp_uart/msp_uart.c
         - path: Hardware/msp_exti/msp_exti.c
+        - path: Hardware/msp_rtc/msp_rtc.c
       folders: []
 dependenceList: []
 outDir: build
@@ -73,6 +74,7 @@ targets:
         - Hardware/msp_uart
         - Hardware/msp_exti
         - Driver/bsp_buzzer
+        - Hardware/msp_rtc
       libList: []
     excludeList: []
     settings:

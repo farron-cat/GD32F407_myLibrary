@@ -8,28 +8,10 @@
 #include "bsp_keys.h"
 #include "bsp_leds.h"
 #include "msp_exti.h"
+#include "msp_rtc.h"
 #include "msp_uart.h"
 
-// 0x1A  0010 0110
-// 26->0x26   26/10 = 2   26%10 = 6
-#define DEC2BCD(val) ((((val) / 10) << 4) | ((val) % 10))
-// 0x26->26  0x26>>4=2  0x26&0x0F = 6
-#define BCD2DEC(val) (((val) >> 4) * 10 + ((val) & 0x0F))
-
-// 日历时间结构体
-typedef struct
-{
-    uint16_t year; // 年里包含世纪
-    uint8_t month;
-    uint8_t day;
-    uint8_t week;
-    uint8_t hour;
-    uint8_t min;
-    uint8_t sec;
-} Time;
-
 Time time;
-
 uint8_t dat[1024] = {0};
 
 void on_usart_recv(USART_HandleTypeDef *huart)
@@ -93,113 +75,6 @@ void DMA1_Channel0_IRQHandler(void)
     }
 }
 
-void msp_rtc_config(void)
-{
-
-    // 打开PMU时钟
-    rcu_periph_clock_enable(RCU_PMU);
-    // 通过PMU解除备份域写保护
-    // pmu_deinit();
-    pmu_backup_write_enable();
-    // 备份域重置
-    rcu_bkp_reset_enable();
-    rcu_bkp_reset_disable();
-
-    // 打开RTC时钟
-    rcu_periph_clock_enable(RCU_RTC);
-    // 复位RTC
-    // rtc_deinit();
-    // 配置RTC时钟源 使用外部高速晶振
-    // 8000000 / 25 = 320000
-    rcu_rtc_div_config(RCU_RTC_HXTAL_DIV25);
-    rcu_rtc_clock_config(RCU_RTCSRC_HXTAL_DIV_RTCDIV);
-    // 等待影子寄存器同步
-    if (rtc_register_sync_wait() == ERROR)
-    {
-        printf("rtc_register_sync_wait error\n");
-        return;
-    }
-    printf("rtc_register_sync_wait ok\n");
-}
-
-void msp_rtc_read(Time *time)
-{
-    rtc_parameter_struct rtc_initpara_struct;
-    rtc_current_time_get(&rtc_initpara_struct);
-
-    time->year = 2000 + BCD2DEC(rtc_initpara_struct.year);
-    time->month = BCD2DEC(rtc_initpara_struct.month);
-    time->day = BCD2DEC(rtc_initpara_struct.date);
-    time->week = rtc_initpara_struct.day_of_week;
-    time->hour = BCD2DEC(rtc_initpara_struct.hour);
-    time->min = BCD2DEC(rtc_initpara_struct.minute);
-    time->sec = BCD2DEC(rtc_initpara_struct.second);
-
-    // printf("sec=%#x, min=%#x, hour=%#x\n", (int)rtc_initpara_struct.second, (int)rtc_initpara_struct.minute, (int)rtc_initpara_struct.hour);
-    // printf("day=%#x, week=%d,month=%#x, year=%#x\n", (int)rtc_initpara_struct.date, (int)rtc_initpara_struct.day_of_week, (int)rtc_initpara_struct.month, (int)rtc_initpara_struct.year);
-}
-
-void msp_rtc_write(Time *time)
-{
-    rtc_parameter_struct rtc_initpara_struct;
-    // 同步和异步预分频率320000/factor_asyn/factor_syn = 1
-    // f_rtcclk/(f_a+1)/(f_s+1) = 1hz
-    rtc_initpara_struct.factor_asyn = 0x7F; /*!< RTC asynchronous prescaler value: 0x0 - 0x7F */
-    rtc_initpara_struct.factor_syn = 0x9C3; /*!< RTC synchronous prescaler value: 0x0 - 0x7FFF */
-    // 设置初始时间
-    rtc_initpara_struct.year = DEC2BCD(time->year % 100); /*!< RTC year value: 0x0 - 0x99(BCD format) */
-    rtc_initpara_struct.month = DEC2BCD(time->month);     /*!< RTC month value */
-    rtc_initpara_struct.date = DEC2BCD(time->day);        /*!< RTC date value: 0x1 - 0x31(BCD format) */
-    rtc_initpara_struct.day_of_week = 4;                  /*!< RTC weekday value */
-    rtc_initpara_struct.hour = DEC2BCD(time->hour);       /*!< RTC hour value */
-    rtc_initpara_struct.minute = DEC2BCD(time->min);      /*!< RTC minute value: 0x0 - 0x59(BCD format) */
-    rtc_initpara_struct.second = DEC2BCD(time->sec);      /*!< RTC second value: 0x0 - 0x59(BCD format) */
-    rtc_initpara_struct.am_pm = RTC_AM;                   /*!< RTC AM/PM value */
-    rtc_initpara_struct.display_format = RTC_24HOUR;      /*!< RTC time notation 24小时制/12小时制*/
-    rtc_init(&rtc_initpara_struct);
-}
-
-void msp_rtc_alarm_config(void)
-{
-    rtc_alarm_struct alarm_struct;
-    alarm_struct.alarm_mask = RTC_ALARM_DATE_MASK | RTC_ALARM_HOUR_MASK | RTC_ALARM_MINUTE_MASK; /*!< RTC alarm mask */
-    alarm_struct.weekday_or_date = RTC_ALARM_DATE_SELECTED;                                      /*!< specify RTC alarm is on date or weekday */
-    alarm_struct.alarm_day = 0x24;                                                               /*!< RTC alarm date or weekday value*/
-    alarm_struct.alarm_hour = 0x15;                                                              /*!< RTC alarm hour value */
-    alarm_struct.alarm_minute = 0x00;                                                            /*!< RTC alarm minute value: 0x0 - 0x59(BCD format) */
-    alarm_struct.alarm_second = 0x00;                                                            /*!< RTC alarm second value: 0x0 - 0x59(BCD format) */
-    alarm_struct.am_pm = RTC_AM;
-
-    rtc_alarm_config(RTC_ALARM0, &alarm_struct);
-
-    // 清标志位
-    rtc_flag_clear(RTC_FLAG_ALRM0);
-    exti_flag_clear(EXTI_17);
-    // 配置 NVIC 中断
-    nvic_irq_enable(RTC_Alarm_IRQn, 2, 2);
-    // 配置 EXTI 外部中断线
-    exti_init(EXTI_17, EXTI_INTERRUPT, EXTI_TRIG_RISING);
-    // 配置EXTI中断与使能
-    exti_interrupt_flag_clear(EXTI_17); // EXTI线编号17是RTC闹钟
-    exti_interrupt_enable(EXTI_17);
-    // 配置RTC闹钟中断与使能
-    rtc_flag_clear(RTC_FLAG_ALRM0);
-    rtc_interrupt_enable(RTC_INT_ALARM0);
-
-    rtc_alarm_enable(RTC_ALARM0);
-}
-
-// 闹钟中断处理函数
-void RTC_Alarm_IRQHandler()
-{
-    if (exti_interrupt_flag_get(EXTI_17) == SET)
-    {
-        exti_interrupt_flag_clear(EXTI_17);
-        rtc_flag_clear(RTC_FLAG_ALRM0);
-        printf("============ alarm ============\n");
-    }
-}
-
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -215,8 +90,8 @@ int main(void)
     // EXTI0 PA0 和 EXTI3 PC3初始化
     msp_exti_init();
     // RTC
-    msp_rtc_config();
-    msp_rtc_alarm_config();
+    msp_rtc_init(HXTAL);
+
     //============ 片外外设 ============
     // LED灯组初始化
     bsp_leds_config();
@@ -239,6 +114,13 @@ int main(void)
     time.min = 59;
     time.sec = 55;
     msp_rtc_write(&time);
+
+    time.day = 24;
+    time.hour = 15;
+    time.min = 0;
+    time.sec = 0;
+    // 闹钟配置
+    msp_rtc_alarm_config(&time);
 
     uint8_t cnt = 0;
     while (1)
