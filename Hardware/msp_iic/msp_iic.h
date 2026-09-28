@@ -20,7 +20,7 @@
 //  SCL高低分别持续5us
 #define IIC_DELAY delay_1us(2)
 
-void msp_iic_config(void);
+void msp_iic_init(void);
 
 void msp_iic_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
 

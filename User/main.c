@@ -9,7 +9,8 @@
 #include "bsp_leds.h"
 #include "bsp_pcf8563.h"
 #include "msp_exti.h"
-#include "msp_iic.h"
+// #include "msp_iic.h"
+#include "msp_iic_hard.h"
 #include "msp_rtc.h"
 #include "msp_uart.h"
 
@@ -135,7 +136,8 @@ int main(void)
     // RTC
     msp_rtc_init(HXTAL);
     // IIC
-    msp_iic_config();
+    // msp_iic_init();
+    msp_iic_hard_init();
 
     //============ 片外外设 ============
     // LED灯组初始化

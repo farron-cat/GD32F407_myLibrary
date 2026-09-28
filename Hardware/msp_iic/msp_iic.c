@@ -1,6 +1,6 @@
 #include "msp_iic.h"
 
-void msp_iic_config(void)
+void msp_iic_init(void)
 {
     // 配置GPIO
     // SCL PB6
