@@ -1,12 +1,10 @@
 #include "bsp_pcf8563.h"
-// #include "msp_iic.h"
-#include "msp_iic_hard.h"
+#include "msp_iic.h"
 
 unsigned char bsp_pcf8563_read_byte(void)
 {
     unsigned char dat;
-    // msp_iic_read_nbyte(PCF8563_ADDR, 0x02, &dat, 1);
-    msp_iic_hard_read_nbyte(PCF8563_ADDR, 0x02, &dat, 1);
+    msp_iic_read_nbyte(PCF8563_ADDR, 0x02, &dat, 1);
 
     return dat;
 }
@@ -17,8 +15,7 @@ void bsp_pcf8563_read_time(Time_pcf *t)
     uint8_t timeBuffer[7] = {0};
     uint8_t Cent;
 
-    // msp_iic_read_nbyte(PCF8563_ADDR, 0x02, timeBuffer, 7);
-    msp_iic_hard_read_nbyte(PCF8563_ADDR, 0x02, timeBuffer, 7);
+    msp_iic_read_nbyte(PCF8563_ADDR, 0x02, timeBuffer, 7);
 
     // 秒：VLsss ssss
     t->second = timeBuffer[0] & 0x7F; // 0x7F = 0111 1111 BCD码 (Binary Coded Decimal)：用4位2进制数表示1位十进制数的编码方式
@@ -54,6 +51,5 @@ void bsp_pcf8563_set_time(void)
     //              second    minutes    hour    day    week    month    year
     uint8_t t_buff[7] = {0x00, 0x00, 0x14, 0x19, 0x03, 0x08, 0x26};
 
-    // msp_iic_write_nbyte(PCF8563_ADDR, 0x02, t_buff, 7);
-    msp_iic_hard_write_nbyte(PCF8563_ADDR, 0x02, t_buff, 7);
+    msp_iic_write_nbyte(PCF8563_ADDR, 0x02, t_buff, 7);
 }

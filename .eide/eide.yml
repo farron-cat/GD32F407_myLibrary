@@ -55,7 +55,6 @@ virtualFolder:
         - path: Hardware/msp_exti/msp_exti.c
         - path: Hardware/msp_rtc/msp_rtc.c
         - path: Hardware/msp_iic/msp_iic.c
-        - path: Hardware/msp_iic/msp_iic_hard.c
       folders: []
 dependenceList: []
 outDir: build
