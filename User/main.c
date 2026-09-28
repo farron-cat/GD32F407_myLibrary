@@ -7,6 +7,7 @@
 #include "bsp_buzzer.h"
 #include "bsp_keys.h"
 #include "bsp_leds.h"
+#include "bsp_pcf8563.h"
 #include "msp_exti.h"
 #include "msp_iic.h"
 #include "msp_rtc.h"
@@ -171,27 +172,33 @@ int main(void)
     // 窗口看门狗
     // msp_wwdgt_config(); // 前面的初始化会消耗时间
 
-#define PCF8563_ADDR 0x51
+    // uint8_t dat[7] = {0};
 
-    uint8_t dat[7] = {0};
+    // dat[0] = 0x55; // 0x37
+    // dat[1] = 0x59;
+    // dat[2] = 0x23;
+    // dat[3] = 0x26;
+    // dat[4] = 6;
+    // dat[5] = 0x09 | (1 << 7);
+    // dat[6] = 0x26;
 
-    dat[0] = 0x55; // 0x37
-    dat[1] = 0x59;
-    dat[2] = 0x23;
-    dat[3] = 0x26;
-    dat[4] = 6;
-    dat[5] = 0x09 | (1 << 7);
-    dat[6] = 0x26;
+    Time_pcf time;
 
-    msp_iic_write_nbyte(PCF8563_ADDR, 0x02, dat, 7);
+    bsp_pcf8563_set_time();
 
     uint8_t cnt = 0;
     while (1)
     {
         delay_1ms(1000);
-        msp_iic_read_nbyte(PCF8563_ADDR, 0x02, dat, 7);
-
-        printf("sec=%#x\n", (int)dat[0]);
+        bsp_pcf8563_read_time(&time);
+        printf("%04X-%02X-%02X %02X:%02X:%02X Week:%d\r\n",
+               time.year,
+               time.month,
+               time.day,
+               time.hour,
+               time.minutes,
+               time.second,
+               time.week);
 
         // 喂狗
         // wwdgt_counter_update(0x7F);

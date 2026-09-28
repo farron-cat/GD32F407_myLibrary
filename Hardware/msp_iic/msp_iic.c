@@ -226,7 +226,7 @@ void msp_iic_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
     // 等待响应
     if (msp_iic_wait_ack())
     {
-        printf("IIC device not found!\n");
+        printf("read1: IIC device not found!\n");
         return;
     }
     // 寄存器地址
@@ -234,7 +234,7 @@ void msp_iic_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
     // 等待响应
     if (msp_iic_wait_ack())
     {
-        printf("IIC device not found!\n");
+        printf("read2: IIC device not found!\n");
         return;
     }
 
@@ -245,7 +245,7 @@ void msp_iic_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
     // 等待响应
     if (msp_iic_wait_ack())
     {
-        printf("IIC device not found!\n");
+        printf("read3: IIC device not found!\n");
         return;
     }
     // 循环读取数据
