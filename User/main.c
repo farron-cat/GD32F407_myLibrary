@@ -5,6 +5,7 @@
 
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
+#include "bsp_iic_oled.h"
 #include "bsp_keys.h"
 #include "bsp_leds.h"
 #include "bsp_pcf8563.h"
@@ -12,6 +13,8 @@
 #include "msp_iic.h"
 #include "msp_rtc.h"
 #include "msp_uart.h"
+
+#include "bmp.h"
 
 Time time;
 uint8_t dat[1024] = {0};
@@ -118,6 +121,52 @@ void msp_wwdgt_config(void)
     wwdgt_enable();
 }
 
+void oled_test(void)
+{
+    uint8_t t = ' ';
+
+    OLED_ShowPicture(0, 0, 128, 64, BMP1, 1);
+    OLED_Refresh();
+    delay_1ms(500);
+    OLED_Clear();
+    OLED_ShowChinese(0, 0, 0, 16, 1);   // 中
+    OLED_ShowChinese(18, 0, 1, 16, 1);  // 景
+    OLED_ShowChinese(36, 0, 2, 16, 1);  // 园
+    OLED_ShowChinese(54, 0, 3, 16, 1);  // 电
+    OLED_ShowChinese(72, 0, 4, 16, 1);  // 子
+    OLED_ShowChinese(90, 0, 5, 16, 1);  // 技
+    OLED_ShowChinese(108, 0, 6, 16, 1); // 术
+    OLED_ShowString(8, 16, "ZHONGJINGYUAN", 16, 1);
+    OLED_ShowString(20, 32, "2014/05/01", 16, 1);
+    OLED_ShowString(0, 48, "ASCII:", 16, 1);
+    OLED_ShowString(63, 48, "CODE:", 16, 1);
+    OLED_ShowChar(48, 48, t, 16, 1); // 显示ASCII字符
+    t++;
+    if (t > '~')
+        t = ' ';
+    OLED_ShowNum(103, 48, t, 3, 16, 1);
+    OLED_Refresh();
+
+    delay_1ms(500);
+    OLED_Clear();
+    OLED_ShowChinese(0, 0, 0, 16, 1);   // 16*16 中
+    OLED_ShowChinese(16, 0, 0, 24, 1);  // 24*24 中
+    OLED_ShowChinese(24, 20, 0, 32, 1); // 32*32 中
+    OLED_ShowChinese(64, 0, 0, 64, 1);  // 64*64 中
+    OLED_Refresh();
+
+    delay_1ms(500);
+    OLED_Clear();
+    OLED_ShowString(0, 0, "ABC", 8, 1);   // 6*8 “ABC”
+    OLED_ShowString(0, 8, "ABC", 12, 1);  // 6*12 “ABC”
+    OLED_ShowString(0, 20, "ABC", 16, 1); // 8*16 “ABC”
+    OLED_ShowString(0, 36, "ABC", 24, 1); // 12*24 “ABC”
+    OLED_Refresh();
+
+    delay_1ms(500);
+    OLED_ScrollDisplay(11, 4, 1);
+}
+
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -144,6 +193,8 @@ int main(void)
     bsp_keys_config();
     // 蜂鸣器初始化
     bsp_buzzer_init();
+    // oled初始化
+    OLED_Init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -206,12 +257,14 @@ int main(void)
     uint8_t cnt = 0;
     while (1)
     {
-        delay_1ms(1000);
+        oled_test();
 
-        bsp_pcf8563_read_time(&time);
-        printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
-               time.year % 100, time.month, time.day,
-               time.hour, time.minutes, time.second, time.week);
+        // delay_1ms(1000);
+
+        // bsp_pcf8563_read_time(&time);
+        // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
+        //        time.year % 100, time.month, time.day,
+        //        time.hour, time.minutes, time.second, time.week);
 
         // 喂狗
         // wwdgt_counter_update(0x7F);

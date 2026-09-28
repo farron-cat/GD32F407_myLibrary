@@ -27,6 +27,7 @@ virtualFolder:
         - path: Driver/bsp_battery_flows/bsp_battery_flows.c
         - path: Driver/bsp_buzzer/bsp_buzzer.c
         - path: Driver/bsp_pcf8563/bsp_pcf8563.c
+        - path: Driver/bsp_iic_oled/bsp_iic_oled.c
       folders: []
     - name: Firmware
       files:
@@ -82,6 +83,7 @@ targets:
         - Hardware/msp_rtc
         - Hardware/msp_iic
         - Driver/bsp_pcf8563
+        - Driver/bsp_iic_oled
       libList: []
     excludeList: []
     settings:
