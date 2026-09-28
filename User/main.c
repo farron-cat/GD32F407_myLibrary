@@ -9,8 +9,8 @@
 #include "bsp_leds.h"
 #include "bsp_pcf8563.h"
 #include "msp_exti.h"
-// #include "msp_iic.h"
-#include "msp_iic_hard.h"
+#include "msp_iic.h"
+// #include "msp_iic_hard.h"
 #include "msp_rtc.h"
 #include "msp_uart.h"
 
@@ -136,8 +136,8 @@ int main(void)
     // RTC
     msp_rtc_init(HXTAL);
     // IIC
-    // msp_iic_init();
-    msp_iic_hard_init();
+    msp_iic_init();
+    // msp_iic_hard_init();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -185,22 +185,35 @@ int main(void)
     // dat[6] = 0x26;
 
     Time_pcf time;
+    Alarm alarm;
 
-    bsp_pcf8563_set_time();
+    // 设置时间
+    time.year = 2026;
+    time.month = 9;
+    time.day = 28;
+    time.week = 1;
+    time.hour = 14;
+    time.minutes = 59;
+    time.second = 55;
+    bsp_pcf8563_set_time(&time);
+
+    // 设置闹钟 15:00 周日
+    alarm.hour = 15;
+    alarm.min = 0;
+    alarm.day = 28;
+    alarm.week = 1;
+    bsp_pcf8563_set_alarm(&alarm);
+    bsp_pcf8563_alarm_enable();
 
     uint8_t cnt = 0;
     while (1)
     {
         delay_1ms(1000);
+
         bsp_pcf8563_read_time(&time);
-        printf("%04X-%02X-%02X %02X:%02X:%02X Week:%d\r\n",
-               time.year,
-               time.month,
-               time.day,
-               time.hour,
-               time.minutes,
-               time.second,
-               time.week);
+        printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
+               time.year % 100, time.month, time.day,
+               time.hour, time.minutes, time.second, time.week);
 
         // 喂狗
         // wwdgt_counter_update(0x7F);

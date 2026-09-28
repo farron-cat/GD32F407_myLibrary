@@ -36,6 +36,12 @@ void msp_exti_init()
     EXTI_config(EXTI3_PORT_RCU, EXTI3_PORT, EXTI3_PIN, EXTI3_PUPD, EXTI3_EXTI_PORT,
                 EXTI3_EXTI_PIN, EXTI3_NUM, EXTI3_TRIG_TYPE, EXTI3_IRQ);
 #endif
+
+#if USE_EXTI5
+    // 初始化PB5
+    EXTI_config(EXTI5_PORT_RCU, EXTI5_PORT, EXTI5_PIN, EXTI5_PUPD, EXTI5_EXTI_PORT,
+                EXTI5_EXTI_PIN, EXTI5_NUM, EXTI5_TRIG_TYPE, EXTI5_IRQ);
+#endif
 }
 
 // EXTI0中断处理函数
@@ -112,6 +118,24 @@ void EXTI3_IRQHandler()
         { // 上升沿  松开
             printf("KEY4_U\n");
         }
+    }
+}
+
+#endif
+
+// EXTI3中断处理函数
+#if USE_EXTI5
+
+extern void on_rtc_int();
+
+void EXTI5_9_IRQHandler()
+{
+    if (exti_interrupt_flag_get(EXTI_5) == SET)
+    {
+        exti_interrupt_flag_clear(EXTI_5);
+
+        // RTC回调
+        on_rtc_int();
     }
 }
 
