@@ -188,7 +188,10 @@ int main(void)
     uint8_t cnt = 0;
     while (1)
     {
-        delay_1ms(5);
+        delay_1ms(1000);
+        msp_iic_read_nbyte(PCF8563_ADDR, 0x02, dat, 7);
+
+        printf("sec=%#x\n", (int)dat[0]);
 
         // Î¹¹·
         // wwdgt_counter_update(0x7F);

@@ -108,6 +108,7 @@ static uint8_t msp_iic_wait_ack(void)
     return 0;
 }
 
+// addr 7bit地址 + 1bit读写位
 void msp_iic_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
 {
     // 起始信号
@@ -138,6 +139,127 @@ void msp_iic_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
             return;
         }
     }
+    // 停止信号
+    msp_iic_stop();
+}
+
+static uint8_t msp_iic_recv_byte(void)
+{
+    uint8_t byte = 0;
+
+    SDA_IN;
+    // SCL低电平持续
+    SCL_L;
+    IIC_DELAY;
+
+    for (uint8_t i = 0; i < 8; i++)
+    {
+
+        // 等待从机写入SDA
+
+        // SCL高电平持续
+        SCL_H;
+
+        // 读取SDA电平
+        if (SDA_STA)
+        {
+            byte |= (0x01 << (7 - i));
+        }
+        else
+        {
+            byte &= ~(0x01 << (7 - i));
+        }
+        IIC_DELAY;
+
+        // SCL低电平持续
+        SCL_L;
+        IIC_DELAY;
+    }
+    return byte;
+}
+
+static void msp_iic_send_ack(void)
+{
+    SDA_OUT;
+
+    // SDA低电平持续
+    SDA_L;
+    IIC_DELAY;
+
+    // SCL高电平持续
+    SCL_H;
+    IIC_DELAY;
+
+    // 等待从机读取
+
+    // SCL低电平持续
+    SCL_L;
+    IIC_DELAY;
+}
+
+static void msp_iic_send_nack(void)
+{
+    SDA_OUT;
+
+    // SDA高电平持续
+    SDA_H;
+    IIC_DELAY;
+
+    // SCL高电平持续
+    SCL_H;
+    IIC_DELAY;
+
+    // 等待从机读取
+
+    // SCL低电平持续
+    SCL_L;
+    IIC_DELAY;
+}
+
+// addr 7bit地址 + 1bit读写位
+void msp_iic_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
+{
+    // 起始信号
+    msp_iic_start();
+    // 设备地址（写地址）
+    msp_iic_send_byte(addr << 1 | 0x0);
+    // 等待响应
+    if (msp_iic_wait_ack())
+    {
+        printf("IIC device not found!\n");
+        return;
+    }
+    // 寄存器地址
+    msp_iic_send_byte(reg);
+    // 等待响应
+    if (msp_iic_wait_ack())
+    {
+        printf("IIC device not found!\n");
+        return;
+    }
+
+    // 起始信号
+    msp_iic_start();
+    // 设备地址（读地址）
+    msp_iic_send_byte(addr << 1 | 0x1);
+    // 等待响应
+    if (msp_iic_wait_ack())
+    {
+        printf("IIC device not found!\n");
+        return;
+    }
+    // 循环读取数据
+    for (uint16_t i = 0; i < len - 1; i++)
+    {
+        // 读取
+        data[i] = msp_iic_recv_byte();
+        // 发送响应
+        msp_iic_send_ack();
+    }
+    // 读取最后一字节
+    data[len - 1] = msp_iic_recv_byte();
+    // 发送空响应
+    msp_iic_send_nack();
     // 停止信号
     msp_iic_stop();
 }

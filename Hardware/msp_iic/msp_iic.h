@@ -24,4 +24,6 @@ void msp_iic_config(void);
 
 void msp_iic_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
 
+void msp_iic_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
+
 #endif // MSP_IIC_H
