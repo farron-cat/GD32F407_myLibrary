@@ -193,6 +193,62 @@ void oled_show_rtc(Time_pcf *t)
     OLED_Refresh();
 }
 
+void msp_adc_config(void)
+{
+    /* 重置 */
+    adc_deinit();
+    /* 使能时钟 */
+    rcu_periph_clock_enable(RCU_ADC0);
+    /* 设置分频系数 21M*/
+    adc_clock_config(ADC_ADCCK_PCLK2_DIV4);
+    /* 设置同步模式(独立模式) */
+    adc_sync_mode_config(ADC_SYNC_MODE_INDEPENDENT);
+    /* 设置单次模式还是连续转换(单次转换) */
+    adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, DISABLE);
+    /* 设置扫描还是非扫描模式(非扫描模式) */
+    adc_special_function_config(ADC0, ADC_SCAN_MODE, DISABLE);
+    /* 设置是否打开插入通道(不打开) */
+    adc_special_function_config(ADC0, ADC_INSERTED_CHANNEL_AUTO, DISABLE);
+    /* 设置分辨率 */
+    adc_resolution_config(ADC0, ADC_RESOLUTION_12B);
+    /* 设置数据对齐 */
+    adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);
+
+    /* 设置转换通道个数(包括常规通道组和插入通道组) */
+    adc_channel_length_config(ADC0, ADC_ROUTINE_CHANNEL, 1);
+    /* 设置转换哪一个通道以及所处序列位置 */
+    adc_routine_channel_config(ADC0, 0, ADC_CHANNEL_16, ADC_SAMPLETIME_480);
+    // 内部通道需要单独打开
+    adc_channel_16_to_18(ADC_TEMP_VREF_CHANNEL_SWITCH, ENABLE);
+    /* 使能ADC */
+    adc_enable(ADC0);
+    /* 内部校准(需要delay等待) */
+    delay_1ms(1);
+    // 校准
+    adc_calibration_enable(ADC0);
+}
+
+void msp_adc_get(void)
+{
+    // 将采集放入转换通道
+    adc_software_trigger_enable(ADC0, ADC_ROUTINE_CHANNEL);
+    // 等待EOC转换完成标志
+    while (adc_flag_get(ADC0, ADC_FLAG_EOC) == RESET)
+        ;
+    // 读取转换结果 规则通道寄存器
+    uint16_t encode = adc_routine_data_read(ADC0);
+    printf("encode = %d\r\n", encode);
+
+    // 根据基准电压计算实际电压
+    float vol = (encode * 3.3f) / 4096;
+    printf("vol = %.2fV\r\n", vol);
+
+    // 计算得到温度值
+    // (v25 - v) / avg_slope + 25
+    float temp = (1.45f - vol) * 1000 / 4.1f + 25;
+    printf("temp = %.2f\r\n", temp);
+}
+
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -211,6 +267,8 @@ int main(void)
     msp_rtc_init(HXTAL);
     // IIC
     msp_iic_init();
+    // ADC 内部温度
+    msp_adc_config();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -293,6 +351,8 @@ int main(void)
         // oled_test();
 
         // delay_1ms(1000);
+
+        msp_adc_get();
 
         bsp_pcf8563_read_time(&time);
 
