@@ -24,7 +24,7 @@ typedef struct {
     uint8_t week;
 } Alarm;
 
-void bsp_pcf8563_init(void);
+void bsp_pcf8563_init(void); // 因为一致性保留
 uint8_t bsp_pcf8563_read_byte(void);
 
 void bsp_pcf8563_set_time(Time_pcf *t);  // 写时间(十进制)

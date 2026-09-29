@@ -25,7 +25,7 @@ typedef enum {
 
 // 软硬件IIC选择
 // 1:硬件IIC  0:软件IIC
-#define IIC_HARD_SOFT_SWITCH 1
+#define IIC_HARD_SOFT_SWITCH 0
 
 #if IIC_HARD_SOFT_SWITCH
 // 硬件IIC
@@ -62,6 +62,9 @@ void msp_iic_init(void);
 
 // IIC写入n个字节
 uint8_t msp_iic_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
+
+// 适配OLED，按列发送len个字节，offset填入data的列数
+uint8_t msp_iic_write_col_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t offset, uint16_t len);
 
 // IIC读取n个字节
 uint8_t msp_iic_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);

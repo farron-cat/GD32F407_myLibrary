@@ -96,21 +96,32 @@ void Send_Byte(uint8_t dat)
 // mode:数据/命令标志 0,表示命令;1,表示数据;
 void OLED_WR_Byte(uint8_t dat, uint8_t mode)
 {
-    I2C_Start();     // 起始信号
-    Send_Byte(0x78); // 设备地址  0x78  0b0111 1000  0b0011 1100
-    I2C_WaitAck();   // 等待响应
+    //
     if (mode)
     {
-        Send_Byte(0x40); // 屏幕显示数据寄存器
+        msp_iic_write_nbyte(0x78 >> 1, 0x40, &dat, 1);
     }
     else
     {
-        Send_Byte(0x00); // SSD1306的指令接收寄存器
+        // SSD1306的指令接收寄存器
+        msp_iic_write_nbyte(0x78 >> 1, 0x00, &dat, 1);
     }
-    I2C_WaitAck();
-    Send_Byte(dat); // 数据
-    I2C_WaitAck();
-    I2C_Stop();
+
+    // I2C_Start();     // 起始信号
+    // Send_Byte(0x78); // 设备地址  0x78  0b0111 1000  0b0011 1100
+    // I2C_WaitAck();   // 等待响应
+    // if (mode)
+    // {
+    //     Send_Byte(0x40); // 屏幕显示数据寄存器
+    // }
+    // else
+    // {
+    //     Send_Byte(0x00); // SSD1306的指令接收寄存器
+    // }
+    // I2C_WaitAck();
+    // Send_Byte(dat); // 数据
+    // I2C_WaitAck();
+    // I2C_Stop();
 }
 
 // 开启OLED显示
@@ -138,17 +149,20 @@ void OLED_Refresh(void)
         OLED_WR_Byte(0xb0 + i, OLED_CMD); // 设置行起始地址
         OLED_WR_Byte(0x00, OLED_CMD);     // 设置低列起始地址
         OLED_WR_Byte(0x10, OLED_CMD);     // 设置高列起始地址
-        I2C_Start();
-        Send_Byte(0x78);
-        I2C_WaitAck();
-        Send_Byte(0x40);
-        I2C_WaitAck();
-        for (n = 0; n < 128; n++)
-        {
-            Send_Byte(OLED_GRAM[n][i]);
-            I2C_WaitAck();
-        }
-        I2C_Stop();
+
+        msp_iic_write_col_nbyte(0x78 >> 1, 0x40, &OLED_GRAM[0][i], 8, 128);
+
+        // I2C_Start();
+        // Send_Byte(0x78);
+        // I2C_WaitAck();
+        // Send_Byte(0x40);
+        // I2C_WaitAck();
+        // for (n = 0; n < 128; n++)
+        // {
+        //     Send_Byte(OLED_GRAM[n][i]);
+        //     I2C_WaitAck();
+        // }
+        // I2C_Stop();
     }
 }
 // 清屏函数
@@ -515,14 +529,15 @@ void OLED_Init(void)
     //  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;//100MHz
     //  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;//上拉
     //  GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化
-    // SCL
-    rcu_periph_clock_enable(RCU_GPIOB);
-    gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_6);
-    gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_MAX, GPIO_PIN_6);
-    // SDA
-    rcu_periph_clock_enable(RCU_GPIOB);
-    gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_7);
-    gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_MAX, GPIO_PIN_7);
+
+    // // SCL
+    // rcu_periph_clock_enable(RCU_GPIOB);
+    // gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_6);
+    // gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_MAX, GPIO_PIN_6);
+    // // SDA
+    // rcu_periph_clock_enable(RCU_GPIOB);
+    // gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_7);
+    // gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_MAX, GPIO_PIN_7);
 
     OLED_WR_Byte(0xAE, OLED_CMD); //--turn off oled panel
     OLED_WR_Byte(0x00, OLED_CMD); //---set low column address

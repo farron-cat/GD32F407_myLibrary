@@ -5,11 +5,13 @@
 // 硬件IIC
 static void msp_iic_hard_init(void);
 static uint8_t msp_iic_hard_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
+static uint8_t msp_iic_hard_write_col_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t offset, uint16_t len);
 static uint8_t msp_iic_hard_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
 #else
 // 软件IIC
 static void msp_iic_soft_init(void);
 static uint8_t msp_iic_soft_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
+static uint8_t msp_iic_soft_write_col_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t offset, uint16_t len);
 static uint8_t msp_iic_soft_read_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
 #endif
 
@@ -35,6 +37,17 @@ uint8_t msp_iic_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t l
 #else
     // 软件IIC
     return msp_iic_soft_write_nbyte(addr, reg, data, len);
+#endif
+}
+
+uint8_t msp_iic_write_col_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t offset, uint16_t len)
+{
+#if IIC_HARD_SOFT_SWITCH
+    // 硬件IIC
+    return msp_iic_hard_write_col_nbyte(addr, reg, data, offset, len);
+#else
+    // 软件IIC
+    return msp_iic_soft_write_col_nbyte(addr, reg, data, offset, len);
 #endif
 }
 
@@ -163,6 +176,69 @@ static uint8_t msp_iic_hard_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data
     for (i = 0; i < len; i++)
     {
         uint32_t d = data[i];
+
+        // 等待发送数据缓冲区为空
+        if (I2C_wait(I2C_FLAG_TBE))
+            return IIC_SEND_DAT_FAILED;
+
+        // 发送数据
+        i2c_data_transmit(i2cx, d);
+
+        // 等待数据发送完成
+        if (I2C_wait(I2C_FLAG_BTC))
+            return IIC_SEND_DAT_FAILED;
+    }
+    /***************** stop ********************/
+    // stop
+    i2c_stop_on_bus(i2cx);
+    while (I2C_CTL0(I2C0) & I2C_CTL0_STOP)
+        ;
+
+    i2c_ack_config(i2cx, I2C_ACK_ENABLE);
+    return IIC_SUC;
+}
+
+// IIC写入Nbyte  addr:7bit地址
+// (uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
+static uint8_t msp_iic_hard_write_col_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t offset, uint16_t len)
+{
+    /************* start ***********************/
+    // 等待I2C闲置
+    if (I2C_waitn(I2C_FLAG_I2CBSY))
+        return IIC_BUS_BSY;
+    // start
+    i2c_start_on_bus(i2cx);
+    // 等待I2C主设备成功发送起始信号
+    if (I2C_wait(I2C_FLAG_SBSEND))
+        return IIC_START_FAILED;
+
+    /************* device address **************/
+    // 发送设备地址 等待响应
+    i2c_master_addressing(i2cx, addr << 1, I2C_TRANSMITTER);
+    // 等待地址发送完成
+    if (I2C_wait(I2C_FLAG_ADDSEND))
+        return IIC_SEND_ADDR_FAILED;
+    i2c_flag_clear(i2cx, I2C_FLAG_ADDSEND);
+
+    /************ register address ************/
+    // 寄存器地址
+    // 等待发送数据缓冲区为空
+    if (I2C_wait(I2C_FLAG_TBE))
+        return IIC_SEND_REG_FAILED;
+
+    // 发送数据
+    i2c_data_transmit(i2cx, reg);
+
+    // 等待数据发送完成
+    if (I2C_wait(I2C_FLAG_BTC))
+        return IIC_SEND_REG_FAILED;
+
+    /***************** data ******************/
+    // 发送数据
+    uint32_t i;
+    for (i = 0; i < len; i++)
+    {
+        uint32_t d = data[i * offset];
 
         // 等待发送数据缓冲区为空
         if (I2C_wait(I2C_FLAG_TBE))
@@ -406,6 +482,43 @@ static uint8_t msp_iic_soft_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data
     for (uint16_t i = 0; i < len; i++)
     {
         msp_iic_send_byte(data[i]);
+        if (msp_iic_wait_ack())
+        {
+            printf("IIC device not acknowledged");
+            return IIC_SEND_DAT_FAILED;
+        }
+    }
+    // 停止信号
+    msp_iic_stop();
+    return IIC_SUC;
+}
+
+// 按列写入n字节
+// addr 7bit地址 + 1bit读写位
+static uint8_t msp_iic_soft_write_col_nbyte(uint8_t addr, uint8_t reg, uint8_t *data, uint16_t offset, uint16_t len)
+{
+    // 起始信号
+    msp_iic_start();
+    // 设备地址（写地址）
+    msp_iic_send_byte(addr << 1 | 0x0);
+    // 等待响应
+    if (msp_iic_wait_ack())
+    {
+        printf("IIC device not found!\n");
+        return IIC_SEND_ADDR_FAILED;
+    }
+    // 寄存器地址
+    msp_iic_send_byte(reg);
+    // 等待响应
+    if (msp_iic_wait_ack())
+    {
+        printf("IIC device not acknowledged!\n");
+        return IIC_SEND_REG_FAILED;
+    }
+    // 循环发送数据
+    for (uint16_t i = 0; i < len; i++)
+    {
+        msp_iic_send_byte(data[i * offset]);
         if (msp_iic_wait_ack())
         {
             printf("IIC device not acknowledged");

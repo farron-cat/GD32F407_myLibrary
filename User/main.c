@@ -167,6 +167,32 @@ void oled_test(void)
     OLED_ScrollDisplay(11, 4, 1);
 }
 
+void oled_show_rtc(Time_pcf *t)
+{
+    char buf[32] = {0};
+
+    // 1. 先显示 BMP1 整幅背景（128x64）
+    //    这一步会覆盖上次 GRAM，保证背景干净
+    OLED_ShowPicture(0, 0, 128, 64, BMP1, 1);
+
+    // 2. 在 BMP1 原本 "2014/05/01" 的位置覆盖显示日期
+    //    原测试代码用的是 (20, 32)，这里保持一致
+    sprintf(buf, "20%02d/%02d/%02d", t->year % 100, t->month, t->day);
+    OLED_ShowString(36, 38, buf, 8, 1);
+
+    // 3. 在日期右侧显示星期
+    // sprintf(buf, "W%d", t->week);
+    // OLED_ShowString(100, 32, buf, 8, 1);
+
+    // 4. 在 BMP1 原本 "ASCII: CODE:" 的位置覆盖显示时间
+    //    原测试代码用的是 (0, 48) 和 (63, 48)，这里把时分秒放到中间
+    sprintf(buf, "%02d:%02d:%02d", t->hour, t->minutes, t->second);
+    OLED_ShowString(36, 2, buf, 8, 1);
+
+    // 5. 统一刷新到 OLED
+    OLED_Refresh();
+}
+
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -195,6 +221,8 @@ int main(void)
     bsp_buzzer_init();
     // oled初始化
     OLED_Init();
+    // pcf8563初始化
+    bsp_pcf8563_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -254,17 +282,36 @@ int main(void)
     bsp_pcf8563_set_alarm(&alarm);
     bsp_pcf8563_alarm_enable();
 
+    OLED_ShowPicture(0, 0, 128, 64, BMP1, 1);
+    OLED_Refresh();
+
+    char buf[64] = {0};
+
     uint8_t cnt = 0;
     while (1)
     {
-        oled_test();
+        // oled_test();
 
         // delay_1ms(1000);
 
-        // bsp_pcf8563_read_time(&time);
-        // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
-        //        time.year % 100, time.month, time.day,
-        //        time.hour, time.minutes, time.second, time.week);
+        bsp_pcf8563_read_time(&time);
+
+        oled_show_rtc(&time);
+        // sprintf(buf, "20%02d-%02d-%02d W:%d\r\n",
+        //         time.year % 100, time.month, time.day, time.week);
+
+        // OLED_ShowString(0, 0, buf, 16, 1);
+
+        // sprintf(buf, "%02d:%02d:%02d\r\n",
+        //         time.hour, time.minutes, time.second);
+
+        // OLED_ShowString(0, 16, buf, 16, 1);
+
+        // OLED_Refresh();
+
+        printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
+               time.year % 100, time.month, time.day,
+               time.hour, time.minutes, time.second, time.week);
 
         // 喂狗
         // wwdgt_counter_update(0x7F);

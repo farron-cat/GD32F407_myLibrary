@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "gd32f4xx.h"
 #include "systick.h"
+#include "msp_iic.h"
 
 //-----------------OLED端口定义----------------
 
