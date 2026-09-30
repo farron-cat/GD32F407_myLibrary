@@ -193,6 +193,41 @@ void oled_show_rtc(Time_pcf *t)
     OLED_Refresh();
 }
 
+uint16_t adc_results[2];
+// P=>M
+void msp_adc_dma_config(void)
+{
+    // 重置DMA
+    dma_deinit(DMA1, DMA_CH0);
+    // 1.开启外设时钟
+    rcu_periph_clock_enable(RCU_DMA1);
+    // 2.配置DMA
+    dma_single_data_parameter_struct init_struct;
+    dma_single_data_para_struct_init(&init_struct);
+
+    init_struct.direction = DMA_PERIPH_TO_MEMORY;
+    init_struct.memory0_addr = (uint32_t)adc_results;
+    init_struct.periph_addr = (uint32_t)(&ADC_RDATA(ADC0));
+
+    init_struct.periph_memory_width = DMA_PERIPH_WIDTH_16BIT; // 根据源地址确定
+    init_struct.number = 2;
+
+    init_struct.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
+    init_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
+    init_struct.circular_mode = DMA_CIRCULAR_MODE_ENABLE;
+    init_struct.priority = DMA_PRIORITY_LOW;
+
+    dma_single_data_mode_init(DMA1, DMA_CH0, &init_struct);
+
+    // 配置DMA通道的子外设 查表
+    dma_channel_subperipheral_select(DMA1, DMA_CH0, DMA_SUBPERI0);
+    // 清理DMA搬运完成标志位
+    dma_flag_clear(DMA1, DMA_CH0, DMA_FLAG_FTF);
+
+    // 3.启动DMA传输
+    dma_channel_enable(DMA1, DMA_CH0);
+}
+
 // 电位器 PC4 ADC0_IN14
 void msp_adc_config(void)
 {
@@ -211,7 +246,7 @@ void msp_adc_config(void)
     /* 设置同步模式(独立模式) */
     adc_sync_mode_config(ADC_SYNC_MODE_INDEPENDENT);
     /* 设置单次模式还是连续转换(单次转换) */
-    adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, DISABLE);
+    adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, ENABLE);
     /* 设置扫描还是非扫描模式(非扫描模式) */
     adc_special_function_config(ADC0, ADC_SCAN_MODE, ENABLE);
     /* 设置是否打开插入通道(不打开) */
@@ -231,37 +266,35 @@ void msp_adc_config(void)
     // 内部通道需要单独打开
     adc_channel_16_to_18(ADC_TEMP_VREF_CHANNEL_SWITCH, ENABLE);
     adc_flag_clear(ADC0, ADC_FLAG_EOC);
-    // 配置常规通道每一个通道转换完成都会产生EOC标志位
-    adc_end_of_conversion_config(ADC0, ADC_EOC_SET_CONVERSION);
+    // // 配置常规通道每一个通道转换完成都会产生EOC标志位
+    // adc_end_of_conversion_config(ADC0, ADC_EOC_SET_CONVERSION);
+
+    /* 配置DMA */
+    // 每个通道转换完成都会产生DMA搬运请求
+    adc_dma_request_after_last_disable(ADC0);
+    adc_dma_mode_enable(ADC0);
+
     /* 使能ADC */
     adc_enable(ADC0);
     /* 内部校准(需要delay等待) */
     delay_1ms(1);
     // 校准
     adc_calibration_enable(ADC0);
+
+    // 将采集放入转换通道
+    adc_software_trigger_enable(ADC0, ADC_ROUTINE_CHANNEL);
 }
 
 void msp_adc_get(void)
 {
-    // 将采集放入转换通道
-    adc_software_trigger_enable(ADC0, ADC_ROUTINE_CHANNEL);
-    // 等待EOC转换完成标志
-    while (adc_flag_get(ADC0, ADC_FLAG_EOC) == RESET)
-        ;
-    adc_flag_clear(ADC0, ADC_FLAG_EOC);
-    // 读取转换结果 规则通道寄存器
 
     // 获取电位器
-    uint16_t encode = adc_routine_data_read(ADC0);
+    uint16_t encode = adc_results[0];
     float vol = (encode * 3.3) / 4096;
-    printf("vol:%f\n", (int)encode, vol);
+    printf("vol:%f\n", vol);
 
-    // 等待EOC转换完成标志
-    while (adc_flag_get(ADC0, ADC_FLAG_EOC) == RESET)
-        ;
-    adc_flag_clear(ADC0, ADC_FLAG_EOC);
     // 获取内部温度
-    encode = adc_routine_data_read(ADC0);
+    encode = adc_results[1];
     // printf("encode = %d\r\n", encode);
 
     // 根据基准电压计算实际电压
@@ -292,6 +325,8 @@ int main(void)
     msp_rtc_init(HXTAL);
     // IIC
     msp_iic_init();
+    // DMA
+    msp_adc_dma_config();
     // ADC 内部温度
     msp_adc_config();
 
