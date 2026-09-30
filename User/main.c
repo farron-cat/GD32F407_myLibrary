@@ -193,20 +193,27 @@ void oled_show_rtc(Time_pcf *t)
     OLED_Refresh();
 }
 
+// 电位器 PC4 ADC0_IN14
 void msp_adc_config(void)
 {
+    // 配置GPIO
+    // 打开时钟
+    rcu_periph_clock_enable(RCU_GPIOC);
+    gpio_mode_set(GPIOC, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO_PIN_4);
+
+    // 配置ADC
     /* 重置 */
     adc_deinit();
     /* 使能时钟 */
     rcu_periph_clock_enable(RCU_ADC0);
-    /* 设置分频系数 21M*/
+    /* 设置分频系数 21Mhz(根据时钟树确定要小于49Mhz)*/
     adc_clock_config(ADC_ADCCK_PCLK2_DIV4);
     /* 设置同步模式(独立模式) */
     adc_sync_mode_config(ADC_SYNC_MODE_INDEPENDENT);
     /* 设置单次模式还是连续转换(单次转换) */
     adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, DISABLE);
     /* 设置扫描还是非扫描模式(非扫描模式) */
-    adc_special_function_config(ADC0, ADC_SCAN_MODE, DISABLE);
+    adc_special_function_config(ADC0, ADC_SCAN_MODE, ENABLE);
     /* 设置是否打开插入通道(不打开) */
     adc_special_function_config(ADC0, ADC_INSERTED_CHANNEL_AUTO, DISABLE);
     /* 设置分辨率 */
@@ -215,11 +222,17 @@ void msp_adc_config(void)
     adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);
 
     /* 设置转换通道个数(包括常规通道组和插入通道组) */
-    adc_channel_length_config(ADC0, ADC_ROUTINE_CHANNEL, 1);
+    adc_channel_length_config(ADC0, ADC_ROUTINE_CHANNEL, 2);
     /* 设置转换哪一个通道以及所处序列位置 */
-    adc_routine_channel_config(ADC0, 0, ADC_CHANNEL_16, ADC_SAMPLETIME_480);
+    adc_routine_channel_config(ADC0, 0, ADC_CHANNEL_14, ADC_SAMPLETIME_15);
+
+    adc_routine_channel_config(ADC0, 1, ADC_CHANNEL_16, ADC_SAMPLETIME_15);
+
     // 内部通道需要单独打开
     adc_channel_16_to_18(ADC_TEMP_VREF_CHANNEL_SWITCH, ENABLE);
+    adc_flag_clear(ADC0, ADC_FLAG_EOC);
+    // 配置常规通道每一个通道转换完成都会产生EOC标志位
+    adc_end_of_conversion_config(ADC0, ADC_EOC_SET_CONVERSION);
     /* 使能ADC */
     adc_enable(ADC0);
     /* 内部校准(需要delay等待) */
@@ -235,15 +248,27 @@ void msp_adc_get(void)
     // 等待EOC转换完成标志
     while (adc_flag_get(ADC0, ADC_FLAG_EOC) == RESET)
         ;
+    adc_flag_clear(ADC0, ADC_FLAG_EOC);
     // 读取转换结果 规则通道寄存器
+
+    // 获取电位器
     uint16_t encode = adc_routine_data_read(ADC0);
-    printf("encode = %d\r\n", encode);
+    float vol = (encode * 3.3) / 4096;
+    printf("vol:%f\n", (int)encode, vol);
+
+    // 等待EOC转换完成标志
+    while (adc_flag_get(ADC0, ADC_FLAG_EOC) == RESET)
+        ;
+    adc_flag_clear(ADC0, ADC_FLAG_EOC);
+    // 获取内部温度
+    encode = adc_routine_data_read(ADC0);
+    // printf("encode = %d\r\n", encode);
 
     // 根据基准电压计算实际电压
-    float vol = (encode * 3.3f) / 4096;
-    printf("vol = %.2fV\r\n", vol);
+    vol = (encode * 3.3f) / 4096;
+    // printf("vol = %.2fV\r\n", vol);
 
-    // 计算得到温度值
+    // 计算得到温度值 (datasheet中找到公式)
     // (v25 - v) / avg_slope + 25
     float temp = (1.45f - vol) * 1000 / 4.1f + 25;
     printf("temp = %.2f\r\n", temp);
