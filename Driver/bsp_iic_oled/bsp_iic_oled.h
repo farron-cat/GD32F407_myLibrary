@@ -22,32 +22,30 @@
 #define OLED_DATA   1 // 写数据
 
 /* 函数声明 */
-void OLED_ColorTurn(uint8_t i);
-void OLED_DisplayTurn(uint8_t i);
+void bsp_iic_oled_color_turn(uint8_t i);
+void bsp_iic_oled_display_turn(uint8_t i);
 
 void I2C_Start(void);
 void I2C_Stop(void);
 void I2C_WaitAck(void);
 void Send_Byte(uint8_t dat);
-void OLED_WR_Byte(uint8_t dat, uint8_t mode);
+void bsp_iic_oled_write_byte(uint8_t dat, uint8_t mode);
 
-void OLED_DisPlay_On(void);
-void OLED_DisPlay_Off(void);
 void OLED_Refresh(void);
-void OLED_Clear(void);
+void bsp_iic_oled_clear(void);
 
-void OLED_DrawPoint(uint8_t x, uint8_t y, uint8_t t);
-void OLED_DrawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t mode);
-void OLED_DrawCircle(uint8_t x, uint8_t y, uint8_t r);
+void bsp_iic_oled_draw_point(uint8_t x, uint8_t y, uint8_t t);
+void bsp_iic_oled_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t mode);
+void bsp_iic_oled_draw_circle(uint8_t x, uint8_t y, uint8_t r);
 
-void OLED_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size1, uint8_t mode);
-void OLED_ShowString(uint8_t x, uint8_t y, uint8_t *chr, uint8_t size1, uint8_t mode);
+void bsp_iic_oled_show_char(uint8_t x, uint8_t y, uint8_t chr, uint8_t size1, uint8_t mode);
+void bsp_iic_oled_show_string(uint8_t x, uint8_t y, uint8_t *chr, uint8_t size1, uint8_t mode);
 uint32_t OLED_Pow(uint8_t m, uint8_t n);
-void OLED_ShowNum(uint8_t x, uint8_t y, uint32_t num, uint8_t len, uint8_t size1, uint8_t mode);
-void OLED_ShowChinese(uint8_t x, uint8_t y, uint8_t num, uint8_t size1, uint8_t mode);
-void OLED_ScrollDisplay(uint8_t num, uint8_t space, uint8_t mode);
-void OLED_ShowPicture(uint8_t x, uint8_t y, uint8_t sizex, uint8_t sizey, uint8_t BMP[], uint8_t mode);
+void bsp_iic_oled_show_number(uint8_t x, uint8_t y, uint32_t num, uint8_t len, uint8_t size1, uint8_t mode);
+void bsp_iic_oled_show_chinese(uint8_t x, uint8_t y, uint8_t num, uint8_t size1, uint8_t mode);
+void bsp_iic_oled_scroll_display(uint8_t num, uint8_t space, uint8_t mode);
+void bsp_iic_oled_show_picture(uint8_t x, uint8_t y, uint8_t sizex, uint8_t sizey, uint8_t BMP[], uint8_t mode);
 
-void OLED_Init(void);
+void bsp_iic_oled_init(void);
 
 #endif /* BSP_IIC_OLED_H */
