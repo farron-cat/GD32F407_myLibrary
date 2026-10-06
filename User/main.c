@@ -13,8 +13,7 @@
 #include "msp_exti.h"
 #include "msp_iic.h"
 #include "msp_rtc.h"
-// #include "msp_spi.h"
-#include "msp_spi_hard.h"
+#include "msp_spi.h"
 #include "msp_uart.h"
 
 #include "bmp.h"
@@ -333,8 +332,7 @@ int main(void)
     // ADC 内部温度
     msp_adc_config();
     // SPI
-    // msp_spi_init();
-    msp_spi_hard_init();
+    msp_spi_init();
 
     //============ 片外外设 ============
     // LED灯组初始化

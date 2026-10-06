@@ -1,6 +1,6 @@
 #include "msp_iic.h"
 
-// ============ 声   明 ============
+// ============ 声    明 ============
 #if IIC_HARD_SOFT_SWITCH
 // 硬件IIC
 static void msp_iic_hard_init(void);
