@@ -31,7 +31,7 @@ void I2C_WaitAck(void);
 void Send_Byte(uint8_t dat);
 void bsp_iic_oled_write_byte(uint8_t dat, uint8_t mode);
 
-void OLED_Refresh(void);
+void bsp_iic_oled_refresh(void);
 void bsp_iic_oled_clear(void);
 
 void bsp_iic_oled_draw_point(uint8_t x, uint8_t y, uint8_t t);

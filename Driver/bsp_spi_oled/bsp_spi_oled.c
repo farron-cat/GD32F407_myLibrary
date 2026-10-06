@@ -57,19 +57,23 @@ void bsp_spi_oled_write_byte(uint8_t dat, uint8_t cmd)
 
     // 拉低片选 开始通信
     OLED_CS_Clr();
-    // 0x55  0b01 010100
-    for (i = 0; i < 8; i++)
-    {
-        // SCL拉低  写入数据
-        OLED_SCL_Clr();
-        if (dat & 0x80) // 0b1000 0000
-            OLED_SDA_Set();
-        else
-            OLED_SDA_Clr();
-        // 拉高 等待对方读取
-        OLED_SCL_Set();
-        dat <<= 1;
-    }
+
+    // 发送1个byte
+    OLED_WRITE_BYTE(dat);
+
+    // // 0x55  0b01 010100
+    // for (i = 0; i < 8; i++)
+    // {
+    //     // SCL拉低  写入数据
+    //     OLED_SCL_Clr();
+    //     if (dat & 0x80) // 0b1000 0000
+    //         OLED_SDA_Set();
+    //     else
+    //         OLED_SDA_Clr();
+    //     // 拉高 等待对方读取
+    //     OLED_SCL_Set();
+    //     dat <<= 1;
+    // }
 
     // 拉高片选 结束通信
     OLED_CS_Set();
@@ -159,42 +163,44 @@ void bsp_spi_oled_display_5x7(uint8_t x, uint8_t y, uint8_t *dp)
     }
 }
 
-// 送指令到晶联讯字库IC
-void Send_Command_to_ROM(uint8_t dat)
-{
-    uint8_t i;
-    for (i = 0; i < 8; i++)
-    {
-        OLED_SCL_Clr();
-        if (dat & 0x80)
-        {
-            OLED_SDA_Set();
-        }
-        else
-        {
-            OLED_SDA_Clr();
-        }
-        dat <<= 1;
-        OLED_SCL_Set();
-    }
-}
+// 替换为msp_spi中的方法
 
-// 从晶联讯字库IC中取汉字或字符数据（1个字节）
-uint8_t Get_data_from_ROM(void)
-{
-    uint8_t i, read = 0;
-    for (i = 0; i < 8; i++)
-    {
-        OLED_SCL_Clr();
-        read <<= 1;
-        if (OLED_READ_FS0())
-        {
-            read++;
-        }
-        OLED_SCL_Set();
-    }
-    return read;
-}
+// // 送指令到晶联讯字库IC
+// void Send_Command_to_ROM(uint8_t dat)
+// {
+//     uint8_t i;
+//     for (i = 0; i < 8; i++)
+//     {
+//         OLED_SCL_Clr();
+//         if (dat & 0x80)
+//         {
+//             OLED_SDA_Set();
+//         }
+//         else
+//         {
+//             OLED_SDA_Clr();
+//         }
+//         dat <<= 1;
+//         OLED_SCL_Set();
+//     }
+// }
+
+// // 从晶联讯字库IC中取汉字或字符数据（1个字节）
+// uint8_t Get_data_from_ROM(void)
+// {
+//     uint8_t i, read = 0;
+//     for (i = 0; i < 8; i++)
+//     {
+//         OLED_SCL_Clr();
+//         read <<= 1;
+//         if (OLED_READ_FS0())
+//         {
+//             read++;
+//         }
+//         OLED_SCL_Set();
+//     }
+//     return read;
+// }
 
 // 从相关地址（addrHigh：地址高字节,addrMid：地址中字节,addrLow：地址低字节）中连续读出DataLen个字节的数据到 pbuff的地址
 // 连续读取
@@ -367,17 +373,14 @@ void bsp_spi_oled_init(void)
     rcu_periph_clock_enable(RCU_GPIOA);
     rcu_periph_clock_enable(RCU_GPIOC);
 
-    gpio_bit_set(GPIOA, GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_7);
+    gpio_bit_set(GPIOA, GPIO_PIN_2 | GPIO_PIN_3);
     gpio_bit_set(GPIOC, GPIO_PIN_5);
 
-    gpio_mode_set(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_7);
-    gpio_output_options_set(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_MAX, GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_7);
+    gpio_mode_set(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_2 | GPIO_PIN_3);
+    gpio_output_options_set(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_MAX, GPIO_PIN_2 | GPIO_PIN_3);
 
     gpio_mode_set(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_5);
     gpio_output_options_set(GPIOC, GPIO_OTYPE_PP, GPIO_OSPEED_MAX, GPIO_PIN_5);
-
-    rcu_periph_clock_enable(RCU_GPIOA);
-    gpio_mode_set(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_PIN_6);
 
     delay_1ms(200);
 

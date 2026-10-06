@@ -30,30 +30,30 @@ typedef enum {
 #if IIC_HARD_SOFT_SWITCH
 // 硬件IIC
 
-#define SCL_AF    GPIO_AF_4
-#define SDA_AF    GPIO_AF_4
+#define IIC_SCL_AF GPIO_AF_4
+#define SDA_AF     GPIO_AF_4
 
-#define IIC_RCU   RCU_I2C0
-#define IIC_NUM   I2C0
-#define IIC_SPEED 400000
+#define IIC_RCU    RCU_I2C0
+#define IIC_NUM    I2C0
+#define IIC_SPEED  400000
 
 #else
 // 软件IIC
 
-#define SCL_H     gpio_bit_set(GPIOB, GPIO_PIN_6)
-#define SCL_L     gpio_bit_reset(GPIOB, GPIO_PIN_6)
+#define IIC_SCL_H   gpio_bit_set(GPIOB, GPIO_PIN_6)
+#define IIC_SCL_L   gpio_bit_reset(GPIOB, GPIO_PIN_6)
 
-#define SDA_H     gpio_bit_set(GPIOB, GPIO_PIN_7)
-#define SDA_L     gpio_bit_reset(GPIOB, GPIO_PIN_7)
+#define IIC_SDA_H   gpio_bit_set(GPIOB, GPIO_PIN_7)
+#define IIC_SDA_L   gpio_bit_reset(GPIOB, GPIO_PIN_7)
 
-#define SDA_IN    gpio_mode_set(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_PIN_7)
-#define SDA_OUT   gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_7)
-#define SDA_STA   gpio_input_bit_get(GPIOB, GPIO_PIN_7)
+#define IIC_SDA_IN  gpio_mode_set(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_PIN_7)
+#define IIC_SDA_OUT gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_7)
+#define IIC_SDA_STA gpio_input_bit_get(GPIOB, GPIO_PIN_7)
 
 // 100kbit/s 100000 <=> 1000000us
 //  1 <=> 10us
 //  SCL高低分别持续5us
-#define IIC_DELAY delay_1us(2)
+#define IIC_DELAY   delay_1us(2)
 
 #endif
 

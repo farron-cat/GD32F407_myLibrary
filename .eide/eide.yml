@@ -58,6 +58,7 @@ virtualFolder:
         - path: Hardware/msp_exti/msp_exti.c
         - path: Hardware/msp_rtc/msp_rtc.c
         - path: Hardware/msp_iic/msp_iic.c
+        - path: Hardware/msp_spi/msp_spi.c
       folders: []
 dependenceList: []
 outDir: build
@@ -88,6 +89,7 @@ targets:
         - Driver/bsp_iic_oled
         - Driver/bsp_vibration_motor
         - Driver/bsp_spi_oled
+        - Hardware/msp_spi
       libList: []
     excludeList: []
     settings:

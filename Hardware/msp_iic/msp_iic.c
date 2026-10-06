@@ -73,7 +73,7 @@ static void msp_iic_hard_gpio_config(void)
     rcu_periph_clock_enable(SCL_RCU);
     gpio_mode_set(SCL_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, SCL_PIN);
     gpio_output_options_set(SCL_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_MAX, SCL_PIN);
-    gpio_af_set(SCL_PORT, SCL_AF, SCL_PIN);
+    gpio_af_set(SCL_PORT, IIC_SCL_AF, SCL_PIN);
 
     // IIC0_SDA PB7 AF4
     rcu_periph_clock_enable(SDA_RCU);
@@ -361,18 +361,18 @@ static void msp_iic_start(void)
 {
     // SCL高电平时，SDA下降沿
 
-    SDA_OUT;
+    IIC_SDA_OUT;
     // SDA高电平持续
-    SDA_H;
+    IIC_SDA_H;
     IIC_DELAY;
     // SCL高电平持续
-    SCL_H;
+    IIC_SCL_H;
     IIC_DELAY;
     // SDA低电平持续
-    SDA_L;
+    IIC_SDA_L;
     IIC_DELAY;
     // SCL低电平持续
-    SCL_L;
+    IIC_SCL_L;
     IIC_DELAY;
 }
 
@@ -381,15 +381,15 @@ static void msp_iic_stop(void)
 {
     // SCL高电平时，SDA上升沿
 
-    SDA_OUT;
+    IIC_SDA_OUT;
     // SDA低电平持续
-    SDA_L;
+    IIC_SDA_L;
     IIC_DELAY;
     // SCL高电平持续
-    SCL_H;
+    IIC_SCL_H;
     IIC_DELAY;
     // SDA高电平持续
-    SDA_H;
+    IIC_SDA_H;
     IIC_DELAY;
 }
 
@@ -399,9 +399,9 @@ static void msp_iic_send_byte(uint8_t byte)
     // SDA在SCL高电平时发送数据
     // 从高位开始发送，每次发送一位
 
-    SDA_OUT;
+    IIC_SDA_OUT;
     // SCL低电平持续
-    SCL_L;
+    IIC_SCL_L;
     IIC_DELAY;
 
     for (uint8_t i = 0; i < 8; i++)
@@ -409,19 +409,19 @@ static void msp_iic_send_byte(uint8_t byte)
         // SDA根据数据配置电平
         if ((byte >> (7 - i)) & 0x01)
         {
-            SDA_H;
+            IIC_SDA_H;
         }
         else
         {
-            SDA_L;
+            IIC_SDA_L;
         }
 
         // SCL高电平持续
-        SCL_H;
+        IIC_SCL_H;
         IIC_DELAY;
 
         // SCL低电平持续
-        SCL_L;
+        IIC_SCL_L;
         IIC_DELAY;
     }
 }
@@ -432,26 +432,26 @@ static uint8_t msp_iic_wait_ack(void)
     // SCL确定会在低电平，可以改变SDA电平
     // 主机主动拉低SDA，交出控制权
 
-    SDA_OUT;
+    IIC_SDA_OUT;
     // SDA高电平持续
     // 主动拉高SDA，保证后续拉低的回复是可信的
-    SDA_H;
+    IIC_SDA_H;
     IIC_DELAY;
 
     // 交出控制权
-    SDA_IN;
+    IIC_SDA_IN;
     IIC_DELAY;
 
     // SCL高电平持续
-    SCL_H;
+    IIC_SCL_H;
     IIC_DELAY;
 
     // 检查SDA电平
-    if (SDA_STA)
+    if (IIC_SDA_STA)
     {
         return 1;
     } // 读 SDA
-    SCL_L;
+    IIC_SCL_L;
     IIC_DELAY; // 成功时拉低 SCL
     return 0;
 }
@@ -535,9 +535,9 @@ static uint8_t msp_iic_recv_byte(void)
 {
     uint8_t byte = 0;
 
-    SDA_IN;
+    IIC_SDA_IN;
     // SCL低电平持续
-    SCL_L;
+    IIC_SCL_L;
     IIC_DELAY;
 
     for (uint8_t i = 0; i < 8; i++)
@@ -546,10 +546,10 @@ static uint8_t msp_iic_recv_byte(void)
         // 等待从机写入SDA
 
         // SCL高电平持续
-        SCL_H;
+        IIC_SCL_H;
 
         // 读取SDA电平
-        if (SDA_STA)
+        if (IIC_SDA_STA)
         {
             byte |= (0x01 << (7 - i));
         }
@@ -560,7 +560,7 @@ static uint8_t msp_iic_recv_byte(void)
         IIC_DELAY;
 
         // SCL低电平持续
-        SCL_L;
+        IIC_SCL_L;
         IIC_DELAY;
     }
     return byte;
@@ -569,40 +569,40 @@ static uint8_t msp_iic_recv_byte(void)
 // 发送应答
 static void msp_iic_send_ack(void)
 {
-    SDA_OUT;
+    IIC_SDA_OUT;
 
     // SDA低电平持续
-    SDA_L;
+    IIC_SDA_L;
     IIC_DELAY;
 
     // SCL高电平持续
-    SCL_H;
+    IIC_SCL_H;
     IIC_DELAY;
 
     // 等待从机读取
 
     // SCL低电平持续
-    SCL_L;
+    IIC_SCL_L;
     IIC_DELAY;
 }
 
 // 发送空应答
 static void msp_iic_send_nack(void)
 {
-    SDA_OUT;
+    IIC_SDA_OUT;
 
     // SDA高电平持续
-    SDA_H;
+    IIC_SDA_H;
     IIC_DELAY;
 
     // SCL高电平持续
-    SCL_H;
+    IIC_SCL_H;
     IIC_DELAY;
 
     // 等待从机读取
 
     // SCL低电平持续
-    SCL_L;
+    IIC_SCL_L;
     IIC_DELAY;
 }
 
