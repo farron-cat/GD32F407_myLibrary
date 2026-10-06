@@ -3,12 +3,13 @@
 
 #include "gd32f4xx.h"
 #include "systick.h"
-#include "msp_spi.h"
+// #include "msp_spi.h"
+#include "msp_spi_hard.h"
 
 // 替换宏
-#define OLED_WRITE_BYTE(byte)     msp_spi_write_byte(byte)
+#define OLED_WRITE_BYTE(byte)     msp_spi_hard_write_byte(byte)
 #define Send_Command_to_ROM(byte) OLED_WRITE_BYTE(byte)
-#define Get_data_from_ROM()       msp_spi_read_byte()
+#define Get_data_from_ROM()       msp_spi_hard_read_byte()
 
 // SCL=SCLK
 // SDA=MOSI

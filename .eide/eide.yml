@@ -46,6 +46,7 @@ virtualFolder:
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_wwdgt.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_i2c.c
         - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_adc.c
+        - path: Firmware/GD32F4xx_standard_peripheral/Source/gd32f4xx_spi.c
       folders: []
     - name: CMSIS
       files:
@@ -59,6 +60,7 @@ virtualFolder:
         - path: Hardware/msp_rtc/msp_rtc.c
         - path: Hardware/msp_iic/msp_iic.c
         - path: Hardware/msp_spi/msp_spi.c
+        - path: Hardware/msp_spi/msp_spi_hard.c
       folders: []
 dependenceList: []
 outDir: build

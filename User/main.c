@@ -13,7 +13,8 @@
 #include "msp_exti.h"
 #include "msp_iic.h"
 #include "msp_rtc.h"
-#include "msp_spi.h"
+// #include "msp_spi.h"
+#include "msp_spi_hard.h"
 #include "msp_uart.h"
 
 #include "bmp.h"
@@ -332,7 +333,8 @@ int main(void)
     // ADC 内部温度
     msp_adc_config();
     // SPI
-    msp_spi_init();
+    // msp_spi_init();
+    msp_spi_hard_init();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -409,7 +411,7 @@ int main(void)
     bsp_iic_oled_refresh();
 
     // bsp_spi_oled_display_128x64(BMP1);
-    bsp_spi_oled_display_GB2312_string(0, 0, "你");
+    bsp_spi_oled_display_GB2312_string(0, 0, "秀儿");
 
     char buf[64] = {0};
 
