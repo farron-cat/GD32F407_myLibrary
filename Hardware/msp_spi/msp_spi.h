@@ -53,4 +53,7 @@ void msp_spi_write_byte(uint8_t byte);
 // 读取1个byte
 uint8_t msp_spi_read_byte(void);
 
+// 读写1个byte
+uint8_t msp_spi_read_write_byte(uint8_t byte);
+
 #endif // MSP_SPI_H

@@ -6,11 +6,14 @@
 static void msp_spi_hard_init(void);
 static void msp_spi_hard_write_byte(uint8_t byte);
 static uint8_t msp_spi_hard_read_byte(void);
+static uint8_t msp_spi_hard_read_write_byte(uint8_t byte);
+
 #else
 // 软件SPI
 static void msp_spi_soft_init(void);
 static void msp_spi_soft_write_byte(uint8_t byte);
 static uint8_t msp_spi_soft_read_byte(void);
+static uint8_t msp_spi_soft_read_write_byte(uint8_t byte);
 #endif
 
 // ============ 外部接口 ============
@@ -47,6 +50,18 @@ uint8_t msp_spi_read_byte(void)
 #else
     // 软件SPI
     return msp_spi_soft_read_byte();
+#endif
+}
+
+// 读写1个byte
+uint8_t msp_spi_read_write_byte(uint8_t byte)
+{
+#if SPI_HARD_SOFT_SWITCH
+    // 硬件SPI
+    return msp_spi_hard_read_write_byte(byte);
+#else
+    // 软件SPI
+    return msp_spi_soft_read_write_byte(byte);
 #endif
 }
 
@@ -111,6 +126,16 @@ static uint8_t msp_spi_hard_read_byte(void)
     return spi_i2s_data_receive(SPI0);
 }
 
+static uint8_t msp_spi_hard_read_write_byte(uint8_t byte)
+{
+    while (RESET == spi_i2s_flag_get(SPI_NUM, SPI_FLAG_TBE))
+        ;
+    spi_i2s_data_transmit(SPI_NUM, dat); // 发送数据主要是为了控制时钟信号线
+    while (RESET == spi_i2s_flag_get(SPI_NUM, SPI_FLAG_RBNE))
+        ;
+    return spi_i2s_data_receive(SPI_NUM);
+}
+
 #else
 // 软件SPI
 // 初始化
@@ -163,6 +188,30 @@ static uint8_t msp_spi_soft_read_byte(void)
             read++;
         }
         SPI_SCL_H;
+    }
+    return read;
+}
+
+static uint8_t msp_spi_soft_read_write_byte(uint8_t byte)
+{
+    uint8_t i, read = 0;
+    for (i = 0; i < 8; i++)
+    {
+        // 拉低SCL 写入
+        SPI_SCL_L;
+        read <<= 1;
+        if (byte & 0x80) // 0b1000 0000
+            SPI_MOSI_H;
+        else
+            SPI_MOSI_L;
+        // 拉高SCL 读取
+        SPI_SCL_H;
+        //		read |= OLED_READ_FS0();
+        if (SPI_MISO_READ)
+        {
+            read++;
+        }
+        byte <<= 1;
     }
     return read;
 }

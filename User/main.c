@@ -314,21 +314,21 @@ void flash_test(void)
 {
     unsigned char buff[20] = {0};
     // 获取GD25Q32的设备ID
-    printf("ID = %X\r\n", GD25Q32_readID());
+    printf("ID = %X\r\n", bsp_flash_read_id());
 
     // 读取0地址长度为7个字节的数据到buff
-    GD25Q32_read(buff, 0, 10);
+    bsp_flash_read(buff, 0, 10);
     // 输出读取到的数据
     printf("buff: %s\r\n", buff);
     delay_1ms(200);
     // 往0地址写入6个字节的数据 “hello”
-    GD25Q32_write((uint8_t *)"hello", 0, 10);
+    bsp_flash_write((uint8_t *)"hello", 0, 10);
 
     // 等待写入完成
     delay_1ms(200);
 
     // 读取0地址长度为7个字节的数据到buff
-    GD25Q32_read(buff, 0, 10);
+    bsp_flash_read(buff, 0, 10);
     // 输出读取到的数据
     printf("buff: %s\r\n", buff);
 
@@ -358,7 +358,7 @@ int main(void)
     // ADC 内部温度
     msp_adc_config();
     // SPI
-    // msp_spi_init();
+    msp_spi_init();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -373,7 +373,7 @@ int main(void)
     // pcf8563初始化
     bsp_pcf8563_init();
     // flash
-    bsp_spi_init();
+    bsp_flash_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);

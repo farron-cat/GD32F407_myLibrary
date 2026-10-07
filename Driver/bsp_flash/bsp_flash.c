@@ -8,23 +8,23 @@
  * 作       者：LC
  * 备       注：无
  **********************************************************/
-void bsp_spi_init(void)
+void bsp_flash_init(void)
 {
     rcu_periph_clock_enable(BSP_GPIO_RCU); // 使用A端口
-    rcu_periph_clock_enable(BSP_SPI_RCU);  // 使能SPI0
+    // rcu_periph_clock_enable(BSP_SPI_RCU);  // 使能SPI0
 
-    // 引脚复用
-    gpio_af_set(BSP_GPIO_PORT, GPIO_AF_5, BSP_SPI_SCK);
-    gpio_af_set(BSP_GPIO_PORT, GPIO_AF_5, BSP_SPI_MISO);
-    gpio_af_set(BSP_GPIO_PORT, GPIO_AF_5, BSP_SPI_MOSI);
-    // 引脚模式
-    gpio_mode_set(BSP_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, BSP_SPI_SCK);
-    gpio_mode_set(BSP_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, BSP_SPI_MISO);
-    gpio_mode_set(BSP_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, BSP_SPI_MOSI);
-    // 输出模式
-    gpio_output_options_set(BSP_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, BSP_SPI_SCK);
-    gpio_output_options_set(BSP_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, BSP_SPI_MISO);
-    gpio_output_options_set(BSP_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, BSP_SPI_MOSI);
+    // // 引脚复用
+    // gpio_af_set(BSP_GPIO_PORT, GPIO_AF_5, BSP_SPI_SCK);
+    // gpio_af_set(BSP_GPIO_PORT, GPIO_AF_5, BSP_SPI_MISO);
+    // gpio_af_set(BSP_GPIO_PORT, GPIO_AF_5, BSP_SPI_MOSI);
+    // // 引脚模式
+    // gpio_mode_set(BSP_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, BSP_SPI_SCK);
+    // gpio_mode_set(BSP_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, BSP_SPI_MISO);
+    // gpio_mode_set(BSP_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, BSP_SPI_MOSI);
+    // // 输出模式
+    // gpio_output_options_set(BSP_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, BSP_SPI_SCK);
+    // gpio_output_options_set(BSP_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, BSP_SPI_MISO);
+    // gpio_output_options_set(BSP_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, BSP_SPI_MOSI);
 
     // 开启CS引脚时钟
     rcu_periph_clock_enable(BSP_SPI_NSS_RCU);
@@ -35,39 +35,40 @@ void bsp_spi_init(void)
     // GD25Q32不选中
     gpio_bit_write(BSP_GPIO_PORT, BSP_SPI_NSS, SET);
 
-    // SPI参数定义结构体
-    spi_parameter_struct spi_init_struct;
-    spi_init_struct.trans_mode = SPI_TRANSMODE_FULLDUPLEX;          // 传输模式全双工
-    spi_init_struct.device_mode = SPI_MASTER;                       // 配置为主机
-    spi_init_struct.frame_size = SPI_FRAMESIZE_8BIT;                // 8位数据
-    spi_init_struct.clock_polarity_phase = SPI_CK_PL_HIGH_PH_2EDGE; // 极性相位
-    spi_init_struct.nss = SPI_NSS_SOFT;                             // 软件cs
-    spi_init_struct.prescale = SPI_PSC_4;                           // SPI时钟预调因数为4
-    spi_init_struct.endian = SPI_ENDIAN_MSB;                        // 高位在前
-    // 将参数填入SPI0
-    spi_init(BSP_SPI, &spi_init_struct);
-    // 使能SPI
-    spi_enable(BSP_SPI);
+    // // SPI参数定义结构体
+    // spi_parameter_struct spi_init_struct;
+    // spi_init_struct.trans_mode = SPI_TRANSMODE_FULLDUPLEX;          // 传输模式全双工
+    // spi_init_struct.device_mode = SPI_MASTER;                       // 配置为主机
+    // spi_init_struct.frame_size = SPI_FRAMESIZE_8BIT;                // 8位数据
+    // spi_init_struct.clock_polarity_phase = SPI_CK_PL_HIGH_PH_2EDGE; // 极性相位
+    // spi_init_struct.nss = SPI_NSS_SOFT;                             // 软件cs
+    // spi_init_struct.prescale = SPI_PSC_4;                           // SPI时钟预调因数为4
+    // spi_init_struct.endian = SPI_ENDIAN_MSB;                        // 高位在前
+    // // 将参数填入SPI0
+    // spi_init(BSP_SPI, &spi_init_struct);
+    // // 使能SPI
+    // spi_enable(BSP_SPI);
 }
 
-uint8_t spi_read_write_byte(uint8_t dat)
-{
-    // 等待发送缓冲区为空
-    while (RESET == spi_i2s_flag_get(BSP_SPI, SPI_FLAG_TBE))
-        ;
-    // 通过SPI4发送一个字节数据
-    spi_i2s_data_transmit(BSP_SPI, dat);
+// 替换为msp_spi中的读写函数
+// uint8_t spi_read_write_byte(uint8_t dat)
+// {
+//     // 等待发送缓冲区为空
+//     while (RESET == spi_i2s_flag_get(BSP_SPI, SPI_FLAG_TBE))
+//         ;
+//     // 通过SPI4发送一个字节数据
+//     spi_i2s_data_transmit(BSP_SPI, dat);
 
-    // 等待接收缓冲区不空标志
-    while (RESET == spi_i2s_flag_get(BSP_SPI, SPI_FLAG_RBNE))
-        ;
-    // 读取并返回在SPI4读取到的单字节数据
-    return spi_i2s_data_receive(BSP_SPI);
-}
+//     // 等待接收缓冲区不空标志
+//     while (RESET == spi_i2s_flag_get(BSP_SPI, SPI_FLAG_RBNE))
+//         ;
+//     // 读取并返回在SPI4读取到的单字节数据
+//     return spi_i2s_data_receive(BSP_SPI);
+// }
 
 // 读取芯片ID
 // 读取设备ID
-uint16_t GD25Q32_readID(void)
+uint16_t bsp_flash_read_id(void)
 {
     uint16_t temp = 0;
     // 将CS端拉低为低电平
@@ -91,7 +92,7 @@ uint16_t GD25Q32_readID(void)
 }
 
 // 发送写使能
-void GD25Q32_write_enable(void)
+void bsp_flash_write_enable(void)
 {
     // 拉低CS端为低电平
     W25QXX_CS_ON(0);
@@ -109,7 +110,7 @@ void GD25Q32_write_enable(void)
  * 作       者：LC
  * 备       注：无
  **********************************************************/
-void GD25Q32_wait_busy(void)
+void bsp_flash_wait_busy(void)
 {
     unsigned char byte = 0;
     do
@@ -134,12 +135,12 @@ void GD25Q32_wait_busy(void)
  * 作       者：LC
  * 备       注：addr=擦除的扇区号，范围=0~15
  **********************************************************/
-void GD25Q32_erase_sector(uint32_t addr)
+void bsp_flash_erase_sector(uint32_t addr)
 {
     // 计算扇区号，一个扇区4KB=4096
     addr *= 4096;
-    GD25Q32_write_enable(); // 写使能
-    GD25Q32_wait_busy();    // 判断忙，如果忙则一直等待
+    bsp_flash_write_enable(); // 写使能
+    bsp_flash_wait_busy();    // 判断忙，如果忙则一直等待
     // 拉低CS端为低电平
     W25QXX_CS_ON(0);
     // 发送指令20h
@@ -153,7 +154,7 @@ void GD25Q32_erase_sector(uint32_t addr)
     // 恢复CS端为高电平
     W25QXX_CS_ON(1);
     // 等待擦除完成
-    GD25Q32_wait_busy();
+    bsp_flash_wait_busy();
 }
 
 /**********************************************************
@@ -164,15 +165,15 @@ void GD25Q32_erase_sector(uint32_t addr)
  * 作       者：LC
  * 备       注：无
  **********************************************************/
-void GD25Q32_write(uint8_t *buffer, uint32_t addr, uint16_t numbyte)
+void bsp_flash_write(uint8_t *buffer, uint32_t addr, uint16_t numbyte)
 {
     unsigned int i = 0;
     // 擦除扇区数据
-    GD25Q32_erase_sector(addr / 4096);
+    bsp_flash_erase_sector(addr / 4096);
     // 写使能
-    GD25Q32_write_enable();
+    bsp_flash_write_enable();
     // 忙检测
-    GD25Q32_wait_busy();
+    bsp_flash_wait_busy();
     // 写入数据
     // 拉低CS端为低电平
     W25QXX_CS_ON(0);
@@ -192,7 +193,7 @@ void GD25Q32_write(uint8_t *buffer, uint32_t addr, uint16_t numbyte)
     // 恢复CS端为高电平
     W25QXX_CS_ON(1);
     // 忙检测
-    GD25Q32_wait_busy();
+    bsp_flash_wait_busy();
 }
 
 /**********************************************************
@@ -203,7 +204,7 @@ void GD25Q32_write(uint8_t *buffer, uint32_t addr, uint16_t numbyte)
  * 作       者：LC
  * 备       注：无
  **********************************************************/
-void GD25Q32_read(uint8_t *buffer, uint32_t read_addr, uint16_t read_length)
+void bsp_flash_read(uint8_t *buffer, uint32_t read_addr, uint16_t read_length)
 {
     uint16_t i;
     // 拉低CS端为低电平
