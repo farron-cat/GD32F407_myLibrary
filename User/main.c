@@ -13,7 +13,8 @@
 #include "msp_exti.h"
 #include "msp_iic.h"
 #include "msp_rtc.h"
-#include "msp_spi.h"
+// #include "msp_spi.h"
+#include "bsp_flash.h"
 #include "msp_uart.h"
 
 #include "bmp.h"
@@ -309,6 +310,31 @@ void msp_adc_get(void)
     printf("temp = %.2f\r\n", temp);
 }
 
+void flash_test(void)
+{
+    unsigned char buff[20] = {0};
+    // 获取GD25Q32的设备ID
+    printf("ID = %X\r\n", GD25Q32_readID());
+
+    // 读取0地址长度为7个字节的数据到buff
+    GD25Q32_read(buff, 0, 10);
+    // 输出读取到的数据
+    printf("buff: %s\r\n", buff);
+    delay_1ms(200);
+    // 往0地址写入6个字节的数据 “hello”
+    GD25Q32_write((uint8_t *)"hello", 0, 10);
+
+    // 等待写入完成
+    delay_1ms(200);
+
+    // 读取0地址长度为7个字节的数据到buff
+    GD25Q32_read(buff, 0, 10);
+    // 输出读取到的数据
+    printf("buff: %s\r\n", buff);
+
+    delay_1ms(1000);
+}
+
 int main(void)
 {
     // 配置整个工程优先级分组 抢占:0~3  响应:0~3
@@ -332,7 +358,7 @@ int main(void)
     // ADC 内部温度
     msp_adc_config();
     // SPI
-    msp_spi_init();
+    // msp_spi_init();
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -346,6 +372,8 @@ int main(void)
     bsp_spi_oled_init();
     // pcf8563初始化
     bsp_pcf8563_init();
+    // flash
+    bsp_spi_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -410,6 +438,8 @@ int main(void)
 
     // bsp_spi_oled_display_128x64(BMP1);
     bsp_spi_oled_display_GB2312_string(0, 0, "秀儿");
+
+    flash_test();
 
     char buf[64] = {0};
 

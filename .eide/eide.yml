@@ -29,6 +29,7 @@ virtualFolder:
         - path: Driver/bsp_pcf8563/bsp_pcf8563.c
         - path: Driver/bsp_iic_oled/bsp_iic_oled.c
         - path: Driver/bsp_spi_oled/bsp_spi_oled.c
+        - path: Driver/bsp_flash/bsp_flash.c
       folders: []
     - name: Firmware
       files:
@@ -91,6 +92,7 @@ targets:
         - Driver/bsp_vibration_motor
         - Driver/bsp_spi_oled
         - Hardware/msp_spi
+        - Driver/bsp_flash
       libList: []
     excludeList: []
     settings:
