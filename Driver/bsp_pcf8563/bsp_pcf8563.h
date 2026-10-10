@@ -40,6 +40,6 @@ void bsp_pcf8563_timer_clear(void);
 
 void on_rtc_alarm(void);
 void on_rtc_timer(void);
-void on_rtc_int(void); // EXTI5 中断入口调用
+void on_rtc_int(void); // 主循环检测到 g_rtc_int_flag 后调用
 
 #endif // BSP_PCF8563_H

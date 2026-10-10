@@ -484,7 +484,7 @@ static uint8_t msp_iic_soft_write_nbyte(uint8_t addr, uint8_t reg, uint8_t *data
         msp_iic_send_byte(data[i]);
         if (msp_iic_wait_ack())
         {
-            printf("IIC device not acknowledged");
+            printf("IIC device not acknowledged\n");
             return IIC_SEND_DAT_FAILED;
         }
     }
@@ -521,7 +521,7 @@ static uint8_t msp_iic_soft_write_col_nbyte(uint8_t addr, uint8_t reg, uint8_t *
         msp_iic_send_byte(data[i * offset]);
         if (msp_iic_wait_ack())
         {
-            printf("IIC device not acknowledged");
+            printf("IIC device not acknowledged\n");
             return IIC_SEND_DAT_FAILED;
         }
     }

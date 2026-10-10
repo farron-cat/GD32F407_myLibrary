@@ -126,7 +126,8 @@ void EXTI3_IRQHandler()
 // EXTI3中断处理函数
 #if USE_EXTI5
 
-extern void on_rtc_int();
+// RTC(PCF8563) 中断标志：中断只置位，IIC 处理交给主循环，避免打断主循环正在进行的软件 IIC 时序
+volatile uint8_t g_rtc_int_flag = 0;
 
 void EXTI5_9_IRQHandler()
 {
@@ -134,8 +135,8 @@ void EXTI5_9_IRQHandler()
     {
         exti_interrupt_flag_clear(EXTI_5);
 
-        // RTC回调
-        on_rtc_int();
+        // 只置标志，不在中断里做 IIC / printf
+        g_rtc_int_flag = 1;
     }
 }
 

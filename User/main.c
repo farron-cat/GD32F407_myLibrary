@@ -231,11 +231,15 @@ int main(void)
     uint32_t num = 0;
     while (1)
     {
-        // 188数码管显示秒数
-        num = get_us_cnt() / 1000000 % 1000;
-        if (num > 199)
-            num = 199;
-        bsp_188_leds_set_num(num);
+        // PCF8563 中断事件处理：原在 EXTI5 中断中执行，移到主循环以避免软件 IIC 重入
+        if (g_rtc_int_flag)
+        {
+            g_rtc_int_flag = 0;
+            on_rtc_int();
+        }
+
+        // 188数码管显示NTC温度
+        bsp_188_leds_set_num(bsp_ntc_get_tem());
 
         // IIC OLED 测试
         // oled_test();
@@ -251,7 +255,7 @@ int main(void)
         //        time.hour, time.minutes, time.second, time.week);
 
         // 串口打印NTC温度
-        printf("NTC Temperature: %d C\r\n", bsp_ntc_get_tem());
+        // printf("NTC Temperature: %d C\r\n", bsp_ntc_get_tem());
 
         // 喂狗
         // wwdgt_counter_update(0x7F);

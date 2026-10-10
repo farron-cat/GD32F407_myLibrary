@@ -150,23 +150,25 @@ __weak void on_rtc_timer(void)
     printf("timer\n");
 }
 
-// EXTI 中断服务函数
-// 由外部 PCF8563 INT 引脚触发的 EXTI 中断调用
+// PCF8563 中断事件处理
+// 不再在 EXTI5 中断里执行，改由主循环检测到 g_rtc_int_flag 后调用（避免软件 IIC 重入）
 void on_rtc_int(void)
 {
-    // printf("exti5\n");
+    uint8_t sta = 0;
 
-    msp_iic_read_nbyte(PCF8563_ADDR, 0x01, &sta_c2, 1);
+    // 读状态控制寄存器 0x01；读取失败直接返回，避免用旧缓存值误判
+    if (msp_iic_read_nbyte(PCF8563_ADDR, 0x01, &sta, 1) != IIC_SUC)
+        return;
 
     // 判断 AF 标志位
-    if ((sta_c2 >> 3) & 0x01)
+    if ((sta >> 3) & 0x01)
     {
         bsp_pcf8563_alarm_clear();
         on_rtc_alarm();
     }
 
     // 判断 TF 标志位
-    if ((sta_c2 >> 2) & 0x01)
+    if ((sta >> 2) & 0x01)
     {
         bsp_pcf8563_timer_clear();
         on_rtc_timer();
