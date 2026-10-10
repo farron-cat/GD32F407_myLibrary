@@ -33,6 +33,7 @@ OF SUCH DAMAGE.
 */
 
 #include "gd32f4xx_it.h"
+#include "bsp_188_leds.h"
 #include "main.h"
 #include "systick.h"
 
@@ -44,5 +45,14 @@ OF SUCH DAMAGE.
 */
 void SysTick_Handler(void)
 {
+    static uint16_t div = 0;
+
     delay_decrement();
+
+    // 每1ms扫描一次188数码管
+    if (++div >= 1000)
+    {
+        div = 0;
+        bsp_188_leds_scan();
+    }
 }

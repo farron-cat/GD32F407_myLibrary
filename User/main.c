@@ -445,13 +445,16 @@ int main(void)
 
     flash_test();
 
-    bsp_188_leds_test();
-
     char buf[64] = {0};
 
     uint8_t cnt = 0;
+    uint32_t num = 0;
     while (1)
     {
+        num = get_us_cnt();
+        bsp_188_leds_clear();
+        bsp_188_leds_set_num(num / 1000000 % 1000);
+
         // oled_test();
 
         // delay_1ms(1000);

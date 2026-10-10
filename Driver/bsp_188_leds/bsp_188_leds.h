@@ -44,6 +44,9 @@ typedef enum {
 // 初始化188数码管
 void bsp_188_leds_init();
 
-void bsp_188_leds_test();
+void bsp_188_leds_show();
+void bsp_188_leds_scan();
+void bsp_188_leds_set_num(uint8_t num);
+void bsp_188_leds_clear();
 
 #endif // BSP_188_LEDS_H
