@@ -10,13 +10,18 @@
 #include "bsp_iic_oled.h"
 #include "bsp_keys.h"
 #include "bsp_leds.h"
+#include "bsp_ntc.h"
 #include "bsp_pcf8563.h"
 #include "bsp_spi_oled.h"
+
+#include "msp_adc.h"
 #include "msp_exti.h"
+#include "msp_fwdgt.h"
 #include "msp_iic.h"
 #include "msp_rtc.h"
 #include "msp_spi.h"
 #include "msp_uart.h"
+#include "msp_wwdgt.h"
 
 #include "bmp.h"
 
@@ -154,10 +159,8 @@ int main(void)
     msp_rtc_init(HXTAL);
     // IIC
     msp_iic_init();
-    // DMA
-    // msp_adc_dma_config();
-    // ADC 内部温度
-    // msp_adc_config();
+    // ADC
+    msp_adc_init();
     // SPI
     msp_spi_init();
 
@@ -175,6 +178,8 @@ int main(void)
     bsp_pcf8563_init();
     // flash
     bsp_flash_init();
+    // NTC
+    bsp_ntc_init();
     // 188LED
     bsp_188_leds_init();
 
@@ -226,7 +231,7 @@ int main(void)
     uint32_t num = 0;
     while (1)
     {
-        // 118数码管显示秒数
+        // 188数码管显示秒数
         num = get_us_cnt() / 1000000 % 1000;
         if (num > 199)
             num = 199;
@@ -244,6 +249,9 @@ int main(void)
         // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
         //        time.year % 100, time.month, time.day,
         //        time.hour, time.minutes, time.second, time.week);
+
+        // 串口打印NTC温度
+        printf("NTC Temperature: %d C\r\n", bsp_ntc_get_tem());
 
         // 喂狗
         // wwdgt_counter_update(0x7F);

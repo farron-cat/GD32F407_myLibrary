@@ -64,6 +64,8 @@ virtualFolder:
         - path: Hardware/msp_iic/msp_iic.c
         - path: Hardware/msp_spi/msp_spi.c
         - path: Hardware/msp_adc/msp_adc.c
+        - path: Hardware/msp_fwdgt/msp_fwdgt.c
+        - path: Hardware/msp_wwdgt/msp_wwdgt.c
       folders: []
 dependenceList: []
 outDir: build
@@ -99,6 +101,8 @@ targets:
         - Driver/bsp_188_leds
         - Hardware/msp_adc
         - Driver/bsp_ntc
+        - Hardware/msp_fwdgt
+        - Hardware/msp_wwdgt
       libList: []
     excludeList: []
     settings:
