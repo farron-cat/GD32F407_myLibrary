@@ -31,6 +31,7 @@ virtualFolder:
         - path: Driver/bsp_spi_oled/bsp_spi_oled.c
         - path: Driver/bsp_flash/bsp_flash.c
         - path: Driver/bsp_188_leds/bsp_188_leds.c
+        - path: Driver/bsp_ntc/bsp_ntc.c
       folders: []
     - name: Firmware
       files:
@@ -62,6 +63,7 @@ virtualFolder:
         - path: Hardware/msp_rtc/msp_rtc.c
         - path: Hardware/msp_iic/msp_iic.c
         - path: Hardware/msp_spi/msp_spi.c
+        - path: Hardware/msp_adc/msp_adc.c
       folders: []
 dependenceList: []
 outDir: build
@@ -95,6 +97,8 @@ targets:
         - Hardware/msp_spi
         - Driver/bsp_flash
         - Driver/bsp_188_leds
+        - Hardware/msp_adc
+        - Driver/bsp_ntc
       libList: []
     excludeList: []
     settings:
