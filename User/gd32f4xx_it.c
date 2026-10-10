@@ -53,6 +53,6 @@ void SysTick_Handler(void)
     if (++div >= 1000)
     {
         div = 0;
-        bsp_188_leds_scan();
+        // bsp_188_leds_scan();
     }
 }

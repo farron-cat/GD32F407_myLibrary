@@ -3,11 +3,12 @@
 #include "systick.h"
 #include <stdio.h>
 
-#include "bsp_188_leds.h"
+// #include "bsp_188_leds.h"
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
 #include "bsp_flash.h"
 #include "bsp_iic_oled.h"
+#include "bsp_keypad.h"
 #include "bsp_keys.h"
 #include "bsp_leds.h"
 #include "bsp_ntc.h"
@@ -181,7 +182,9 @@ int main(void)
     // NTC
     bsp_ntc_init();
     // 188LED
-    bsp_188_leds_init();
+    // bsp_188_leds_init();
+    // 矩阵键盘初始化
+    bsp_keypad_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -239,7 +242,7 @@ int main(void)
         }
 
         // 188数码管显示NTC温度
-        bsp_188_leds_set_num(bsp_ntc_get_tem());
+        // bsp_188_leds_set_num(bsp_ntc_get_tem());
 
         // IIC OLED 测试
         // oled_test();
@@ -259,6 +262,13 @@ int main(void)
 
         // 喂狗
         // wwdgt_counter_update(0x7F);
+
+        // bsp_buzzer_play_little_star();
+
+        // 矩阵键盘扫描 与188数码管引脚冲突，不能同时使用
+        int key = KeypadScan();
+        if (key != 255)
+            printf("key: %d\n", key);
 
         cnt++;
     }

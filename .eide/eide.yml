@@ -32,6 +32,7 @@ virtualFolder:
         - path: Driver/bsp_flash/bsp_flash.c
         - path: Driver/bsp_188_leds/bsp_188_leds.c
         - path: Driver/bsp_ntc/bsp_ntc.c
+        - path: Driver/bsp_keypad/bsp_keypad.c
       folders: []
     - name: Firmware
       files:
@@ -103,6 +104,7 @@ targets:
         - Driver/bsp_ntc
         - Hardware/msp_fwdgt
         - Hardware/msp_wwdgt
+        - Driver/bsp_keypad
       libList: []
     excludeList: []
     settings:
