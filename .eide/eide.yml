@@ -30,6 +30,7 @@ virtualFolder:
         - path: Driver/bsp_iic_oled/bsp_iic_oled.c
         - path: Driver/bsp_spi_oled/bsp_spi_oled.c
         - path: Driver/bsp_flash/bsp_flash.c
+        - path: Driver/bsp_188_leds/bsp_188_leds.c
       folders: []
     - name: Firmware
       files:
@@ -93,6 +94,7 @@ targets:
         - Driver/bsp_spi_oled
         - Hardware/msp_spi
         - Driver/bsp_flash
+        - Driver/bsp_188_leds
       libList: []
     excludeList: []
     settings:

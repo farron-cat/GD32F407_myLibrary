@@ -14,6 +14,7 @@
 #include "msp_iic.h"
 #include "msp_rtc.h"
 // #include "msp_spi.h"
+#include "bsp_188_leds.h"
 #include "bsp_flash.h"
 #include "msp_uart.h"
 
@@ -375,6 +376,9 @@ int main(void)
     // flash
     bsp_flash_init();
 
+    // 188LED
+    bsp_188_leds_init();
+
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
 
@@ -440,6 +444,8 @@ int main(void)
     bsp_spi_oled_display_GB2312_string(0, 0, "Ðã¶ù");
 
     flash_test();
+
+    bsp_188_leds_test();
 
     char buf[64] = {0};
 
