@@ -48,5 +48,6 @@ void bsp_188_leds_show();
 void bsp_188_leds_scan();
 void bsp_188_leds_set_num(uint8_t num);
 void bsp_188_leds_clear();
-
+void bsp_188_leds_set_charge(uint8_t charge_flag);
+void bsp_188_leds_set_percent(uint8_t percent_flag);
 #endif // BSP_188_LEDS_H

@@ -451,9 +451,10 @@ int main(void)
     uint32_t num = 0;
     while (1)
     {
-        num = get_us_cnt();
-        bsp_188_leds_clear();
-        bsp_188_leds_set_num(num / 1000000 % 1000);
+        num = get_us_cnt() / 1000000 % 1000;
+        if (num > 199)
+            num = 199;
+        bsp_188_leds_set_num(num);
 
         // oled_test();
 

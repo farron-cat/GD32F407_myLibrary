@@ -232,6 +232,9 @@ void bsp_188_leds_set_num(uint8_t num)
     if (num > 199)
         return;
 
+    // 清除原有的数字显示状态，只保留 K1 和 K2 的状态
+    bsp_188_leds_clear();
+
     if (num > 99)
     {
         // 显示百位
@@ -248,6 +251,29 @@ void bsp_188_leds_set_num(uint8_t num)
 
 void bsp_188_leds_clear()
 {
-    // PIN_ALL_IN;
-    leds_status = 0;
+    leds_status &= K1 | K2;
+}
+
+void bsp_188_leds_set_charge(uint8_t charge_flag)
+{
+    if (charge_flag)
+    {
+        leds_status |= K1;
+    }
+    else
+    {
+        leds_status &= ~K1;
+    }
+}
+
+void bsp_188_leds_set_percent(uint8_t percent_flag)
+{
+    if (percent_flag)
+    {
+        leds_status |= K2;
+    }
+    else
+    {
+        leds_status &= ~K2;
+    }
 }
