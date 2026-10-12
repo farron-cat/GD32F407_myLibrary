@@ -47,6 +47,10 @@ static void msp_adc_config()
     // NTC热敏电阻
     rcu_periph_clock_enable(RCU_GPIOA);
     gpio_mode_set(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO_PIN_1);
+
+    // ADKEY PB00
+    rcu_periph_clock_enable(RCU_GPIOC);
+    gpio_mode_set(GPIOB, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO_PIN_0);
     /*********************** ADC配置 ***********************/
 
     /* 重置 */
@@ -73,6 +77,7 @@ static void msp_adc_config()
     adc_routine_channel_config(ADC0, 0, ADC_CHANNEL_14, ADC_SAMPLETIME_15);  // 内部温度传感器 17.1us
     adc_routine_channel_config(ADC0, 1, ADC_CHANNEL_16, ADC_SAMPLETIME_480); // 内部温度传感器 17.1us
     adc_routine_channel_config(ADC0, 2, ADC_CHANNEL_1, ADC_SAMPLETIME_15);
+    adc_routine_channel_config(ADC0, 3, ADC_CHANNEL_8, ADC_SAMPLETIME_15);
     // 内部通道需要单独打开
     adc_channel_16_to_18(ADC_TEMP_VREF_CHANNEL_SWITCH, ENABLE);
     adc_flag_clear(ADC0, ADC_FLAG_EOC);

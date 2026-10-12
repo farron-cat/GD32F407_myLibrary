@@ -6,7 +6,7 @@
 #include <string.h>
 #include "systick.h"
 
-#define ADC_LEN 3
+#define ADC_LEN 4
 #define VREF    3.3
 
 // adc初始化

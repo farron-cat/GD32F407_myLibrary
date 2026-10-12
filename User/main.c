@@ -3,7 +3,8 @@
 #include "systick.h"
 #include <stdio.h>
 
-// #include "bsp_188_leds.h"
+#include "bsp_188_leds.h"
+#include "bsp_adkey.h"
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
 #include "bsp_flash.h"
@@ -33,11 +34,11 @@ void on_usart_recv(USART_HandleTypeDef *huart)
     if (huart->usartx == USART0)
     {
         printf("usart0_recv:%s\n", huart->recv_buff);
-        // 配置剩余参数
-        dma_periph_address_config(DMA1, DMA_CH0, (uint32_t)huart->recv_buff);
-        dma_transfer_number_config(DMA1, DMA_CH0, huart->recv_length);
-        // 启动DMA传输
-        dma_channel_enable(DMA1, DMA_CH0);
+        // // 配置剩余参数
+        // dma_periph_address_config(DMA1, DMA_CH0, (uint32_t)huart->recv_buff);
+        // dma_transfer_number_config(DMA1, DMA_CH0, huart->recv_length);
+        // // 启动DMA传输
+        // dma_channel_enable(DMA1, DMA_CH0);
     }
 }
 
@@ -182,9 +183,11 @@ int main(void)
     // NTC
     bsp_ntc_init();
     // 188LED
-    // bsp_188_leds_init();
+    bsp_188_leds_init();
     // 矩阵键盘初始化
-    bsp_keypad_init();
+    // bsp_keypad_init();
+    // ADKEY
+    bsp_adkey_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -242,7 +245,9 @@ int main(void)
         }
 
         // 188数码管显示NTC温度
-        // bsp_188_leds_set_num(bsp_ntc_get_tem());
+        bsp_188_leds_set_num(bsp_ntc_get_tem());
+        // ADKEY
+        bsp_adkey_scan();
 
         // IIC OLED 测试
         // oled_test();
@@ -266,9 +271,9 @@ int main(void)
         // bsp_buzzer_play_little_star();
 
         // 矩阵键盘扫描 与188数码管引脚冲突，不能同时使用
-        int key = KeypadScan();
-        if (key != 255)
-            printf("key: %d\n", key);
+        // int key = KeypadScan();
+        // if (key != 255)
+        //     printf("key: %d\n", key);
 
         cnt++;
     }
