@@ -246,8 +246,7 @@ int main(void)
 
         // 188数码管显示NTC温度
         bsp_188_leds_set_num(bsp_ntc_get_tem());
-        // ADKEY
-        bsp_adkey_scan();
+        // ADKEY 扫描放入了systick中断中，每1ms扫描一次
 
         // IIC OLED 测试
         // oled_test();

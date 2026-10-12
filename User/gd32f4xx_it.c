@@ -34,6 +34,7 @@ OF SUCH DAMAGE.
 
 #include "gd32f4xx_it.h"
 #include "bsp_188_leds.h"
+#include "bsp_adkey.h"
 #include "main.h"
 #include "systick.h"
 
@@ -53,6 +54,9 @@ void SysTick_Handler(void)
     if (++div >= 1000)
     {
         div = 0;
+        // 每1ms扫描一次188数码管
         bsp_188_leds_scan();
+        // 每1ms扫描一次按键
+        bsp_adkey_scan();
     }
 }
