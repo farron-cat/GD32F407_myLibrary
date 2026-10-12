@@ -89,6 +89,10 @@ static void msp_adc_config()
     adc_dma_request_after_last_enable(ADC0);
     adc_dma_mode_enable(ADC0);
 
+    // 硬件过采样滤波，用于ADKEY滤波
+    adc_oversample_mode_config(ADC0, ADC_OVERSAMPLING_ALL_CONVERT, ADC_OVERSAMPLING_SHIFT_4B, ADC_OVERSAMPLING_RATIO_MUL16);
+    adc_oversample_mode_enable(ADC0);
+
     /* 使能ADC */
     adc_enable(ADC0);
     /* 内部校准(需要delay等待) */
