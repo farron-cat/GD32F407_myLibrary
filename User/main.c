@@ -226,7 +226,7 @@ int main(void)
     // SPI屏幕显示图片
     // bsp_spi_oled_display_128x64(BMP1);
     // SPI屏幕显示中文
-    bsp_spi_oled_display_GB2312_string(0, 0, "秀");
+    bsp_spi_oled_display_GB2312_string(0, 0, "不要瞎搞");
 
     // FLASH 测试
     flash_test();

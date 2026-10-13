@@ -42,6 +42,18 @@ void msp_exti_init()
     EXTI_config(EXTI5_PORT_RCU, EXTI5_PORT, EXTI5_PIN, EXTI5_PUPD, EXTI5_EXTI_PORT,
                 EXTI5_EXTI_PIN, EXTI5_NUM, EXTI5_TRIG_TYPE, EXTI5_IRQ);
 #endif
+
+#if USE_EXTI11
+    // 初始化PD11 旋转编码器引脚A
+    EXTI_config(EXTI11_PORT_RCU, EXTI11_PORT, EXTI11_PIN, EXTI11_PUPD, EXTI11_EXTI_PORT,
+                EXTI11_EXTI_PIN, EXTI11_NUM, EXTI11_TRIG_TYPE, EXTI11_IRQ);
+#endif
+
+#if USE_EXTI15
+    // 初始化PD15 旋转编码器引脚D
+    EXTI_config(EXTI15_PORT_RCU, EXTI15_PORT, EXTI15_PIN, EXTI15_PUPD, EXTI15_EXTI_PORT,
+                EXTI15_EXTI_PIN, EXTI15_NUM, EXTI15_TRIG_TYPE, EXTI15_IRQ);
+#endif
 }
 
 // EXTI0中断处理函数
@@ -137,6 +149,25 @@ void EXTI5_9_IRQHandler()
 
         // 只置标志，不在中断里做 IIC / printf
         g_rtc_int_flag = 1;
+    }
+}
+
+#endif
+
+// EXTI15 USE_EXTI11 中断处理函数
+#if USE_EXTI15 || USE_EXTI11
+void EXTI10_15_IRQHandler()
+{
+    if (exti_interrupt_flag_get(EXTI_15) == SET)
+    {
+        exti_interrupt_flag_clear(EXTI_15);
+        printf("EXIT15\n");
+    }
+
+    if (exti_interrupt_flag_get(EXTI_11) == SET)
+    {
+        exti_interrupt_flag_clear(EXTI_11);
+        printf("EXIT11\n");
     }
 }
 

@@ -5,9 +5,11 @@
 #include "systick.h"
 #include <stdio.h>
 
-#define USE_EXTI0 1
-#define USE_EXTI3 1
-#define USE_EXTI5 1
+#define USE_EXTI0  1
+#define USE_EXTI3  1
+#define USE_EXTI5  1
+#define USE_EXTI11 1
+#define USE_EXTI15 1
 
 #if USE_EXTI0
 
@@ -48,6 +50,34 @@
 #define EXTI5_NUM       EXTI_5
 #define EXTI5_TRIG_TYPE EXTI_TRIG_FALLING
 #define EXTI5_IRQ       EXTI5_9_IRQn
+
+#endif
+
+#if USE_EXTI11
+// 旋转编码器引脚A
+#define EXTI11_PORT_RCU  RCU_GPIOD
+#define EXTI11_PORT      GPIOD
+#define EXTI11_PIN       GPIO_PIN_11
+#define EXTI11_PUPD      GPIO_PUPD_PULLUP
+#define EXTI11_EXTI_PORT EXTI_SOURCE_GPIOD
+#define EXTI11_EXTI_PIN  EXTI_SOURCE_PIN11
+#define EXTI11_NUM       EXTI_11
+#define EXTI11_TRIG_TYPE EXTI_TRIG_BOTH
+#define EXTI11_IRQ       EXTI10_15_IRQn
+
+#endif
+
+#if USE_EXTI15
+// 旋转编码器引脚D
+#define EXTI15_PORT_RCU  RCU_GPIOD
+#define EXTI15_PORT      GPIOD
+#define EXTI15_PIN       GPIO_PIN_15
+#define EXTI15_PUPD      GPIO_PUPD_PULLUP
+#define EXTI15_EXTI_PORT EXTI_SOURCE_GPIOD
+#define EXTI15_EXTI_PIN  EXTI_SOURCE_PIN15
+#define EXTI15_NUM       EXTI_15
+#define EXTI15_TRIG_TYPE EXTI_TRIG_FALLING
+#define EXTI15_IRQ       EXTI10_15_IRQn
 
 #endif
 
