@@ -7,6 +7,7 @@
 #include "bsp_adkey.h"
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
+#include "bsp_ec12d.h"
 #include "bsp_flash.h"
 #include "bsp_iic_oled.h"
 #include "bsp_keypad.h"
@@ -188,6 +189,8 @@ int main(void)
     // bsp_keypad_init();
     // ADKEY
     bsp_adkey_init();
+    // Ðý×ª±àÂëÆ÷
+    bsp_ec12d_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);

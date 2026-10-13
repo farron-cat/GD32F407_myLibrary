@@ -5,11 +5,11 @@
 #include "systick.h"
 #include <stdio.h>
 
-#define USE_EXTI0  1
-#define USE_EXTI3  1
-#define USE_EXTI5  1
-#define USE_EXTI11 1
-#define USE_EXTI15 1
+#define USE_EXTI0  1 // 核心板按键 KEYC
+#define USE_EXTI3  1 // 独立按键 KEY4
+#define USE_EXTI5  1 // PCF8563
+#define USE_EXTI11 1 // 旋转编码器引脚A
+#define USE_EXTI15 1 // 旋转编码器引脚B
 
 #if USE_EXTI0
 

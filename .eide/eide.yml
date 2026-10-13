@@ -34,6 +34,7 @@ virtualFolder:
         - path: Driver/bsp_ntc/bsp_ntc.c
         - path: Driver/bsp_keypad/bsp_keypad.c
         - path: Driver/bsp_adkey/bsp_adkey.c
+        - path: Driver/bsp_ec12d/bsp_ec12d.c
       folders: []
     - name: Firmware
       files:
@@ -107,6 +108,7 @@ targets:
         - Hardware/msp_wwdgt
         - Driver/bsp_keypad
         - Driver/bsp_adkey
+        - Driver/bsp_ec12d
       libList: []
     excludeList: []
     settings:

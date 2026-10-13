@@ -1,4 +1,5 @@
 #include "msp_exti.h"
+#include "bsp_ec12d.h"
 
 static void EXTI_config(rcu_periph_enum rcu, uint32_t port, uint32_t pin, uint32_t pupd,
                         uint8_t exti_port, uint8_t exti_pin, exti_line_enum linex,
@@ -156,19 +157,26 @@ void EXTI5_9_IRQHandler()
 
 // EXTI15 USE_EXTI11 中断处理函数
 #if USE_EXTI15 || USE_EXTI11
+
 void EXTI10_15_IRQHandler()
 {
+#if USE_EXTI15
+    //  PD15 旋转编码器引脚D 按键
     if (exti_interrupt_flag_get(EXTI_15) == SET)
     {
         exti_interrupt_flag_clear(EXTI_15);
-        printf("EXIT15\n");
+        on_ec12d_key_press();
     }
+#endif
 
+#if USE_EXTI11
+    // PD11 旋转编码器引脚A 旋钮
     if (exti_interrupt_flag_get(EXTI_11) == SET)
     {
         exti_interrupt_flag_clear(EXTI_11);
-        printf("EXIT11\n");
+        on_ec12d_exti();
     }
+#endif
 }
 
 #endif
