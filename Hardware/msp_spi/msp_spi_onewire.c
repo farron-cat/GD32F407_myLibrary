@@ -3,36 +3,37 @@
 // 0:软实现  1:硬实现
 #define SPI_HARD_SOFT 1
 
-#define SPI_SCL_RCU RCU_GPIOB
-#define SPI_SCL_PORT GPIOB
-#define SPI_SCL_PIN GPIO_PIN_13
-
+// WS2812 只用一根数据线(DIN)，所以本模块只配 MOSI(PB15)
 #define SPI_MOSI_RCU RCU_GPIOB
 #define SPI_MOSI_PORT GPIOB
 #define SPI_MOSI_PIN GPIO_PIN_15
 
-#define SPI_MISO_RCU RCU_GPIOB
-#define SPI_MISO_PORT GPIOB
-#define SPI_MISO_PIN GPIO_PIN_14
+// ⚠ 以下两个引脚在本板上不能配(SCK/MISO 对 WS2812 无用)：
+//   PB13 = 网络 CAN_TX(P3.25 + TJA1050-1.2 TXD)：配成 SPI1_SCK 输出后，
+//          10.5MHz 方波会被 TJA1050 直接搬到 CANH/CANL → CAN 总线被垃圾帧占死
+//   PB14 = 只引到排针 P3.28，没有接任何器件
+// #define SPI_SCL_RCU RCU_GPIOB
+// #define SPI_SCL_PORT GPIOB
+// #define SPI_SCL_PIN GPIO_PIN_13
+// #define SPI_MISO_RCU RCU_GPIOB
+// #define SPI_MISO_PORT GPIOB
+// #define SPI_MISO_PIN GPIO_PIN_14
 
 #if SPI_HARD_SOFT
-#define SPI_SCL_AF GPIO_AF_5
 #define SPI_MOSI_AF GPIO_AF_5
-#define SPI_MISO_AF GPIO_AF_5
 
+// SPI1 挂在 APB1(168M PLL: AHB=168M / APB1=DIV4 = 42MHz)，SPI_PSC_4 → 10.5MHz
+// (旧注释"84M/4 = 21M"是 SPI0/APB2 的账，SPI1 不在 APB2)
+// 本工程 WS2812 采用「1 个 WS2812 位 = 13 个 SPI 位」：13 / 10.5M = 1238ns ≈ 1.25us
+// 对应编码表见 Driver/bsp_ws2812_rgb_leds/bsp_ws2812_rgb_leds.c
 #define SPI_RCU RCU_SPI1
 #define SPI_NUM SPI1
 #define SPI_PL_PH SPI_CK_PL_HIGH_PH_2EDGE
 #define SPI_PRES SPI_PSC_4
 #else
-// SCL  PA5
-#define SPI_SCL_L gpio_bit_reset(SPI_SCL_PORT, SPI_SCL_PIN) // SCL
-#define SPI_SCL_H gpio_bit_set(SPI_SCL_PORT, SPI_SCL_PIN)
-// MOSI  PA7
-#define SPI_MOSI_L gpio_bit_reset(SPI_MOSI_PORT, SPI_MOSI_PIN) // SDA
-#define SPI_MOSI_H gpio_bit_set(SPI_MOSI_PORT, SPI_MOSI_PIN)
-// MISO  PA6
-#define SPI_READ_MISO gpio_input_bit_get(SPI_MISO_PORT, SPI_MISO_PIN) // FS0
+// ⚠ 软件分支在本板上不可用：它依赖 SCL/MISO(原定 PB13/PB14)，而 PB13 = CAN_TX
+//   要用软实现请先把 SCL 换到真正空闲的引脚，并恢复上面的 SPI_SCL_*/SPI_MISO_* 定义
+#error "SPI_HARD_SOFT=0 的软实现依赖已禁用的 PB13/PB14，请先改引脚定义"
 #endif
 
 #if SPI_HARD_SOFT
@@ -51,9 +52,13 @@ static void soft_spi_write_byte(uint8_t dat);
 static uint8_t soft_spi_read_byte();
 #endif
 
-// SCL:PA5
-// MOSI:PA7
-// MISO:PA6
+// 单总线(WS2812 等)：MOSI(PB15) 接 DIN
+// SPI1 = APB1 42MHz ÷ 4 = 10.5MHz
+
+// 帧复位长度(字节)：0x00 = 8 个 0 位 = 连续低电平 762ns/字节
+// 400 字节 ≈ 305us(WS2812B 需 >50us；WS2812B-V5 需 >280us)
+#define SPI_ONEWIRE_RESET_BYTES 400
+
 /******************************** 对外暴露方法 ********************************/
 // 初始化
 void msp_spi_onewire_init()
@@ -85,23 +90,34 @@ uint8_t msp_spi_onewire_read_byte()
 #endif
 }
 
+// 帧复位：用 SPI 连续发 SPI_ONEWIRE_RESET_BYTES 个 0x00，把数据线连续拉低
+//   0x00 的 8 个 bit 全是 0 → 每个字节 = 连续低电平 8 / 10.5MHz = 762ns
+//   400 字节 = 305us，满足 WS2812B(>50us) 与 WS2812B-V5(>280us)
+// ⚠ 这里必须"由 SPI 自己打低"，不能"切 GPIO 拉低再切回 AF"：
+//   切 AF 期间 MOSI 是高阻，会被板上 R6(10K 上拉到 +5V)拉高，
+//   第 1 颗单总线器件会把那段长高电平当成多出来的 1 个数据位('1') → 数据错位
+// 本函数只用 SPI 写字节，不依赖 SysTick，可在关中断状态下调用
+void msp_spi_onewire_reset(void)
+{
+#if SPI_HARD_SOFT
+    for (uint16_t i = 0; i < SPI_ONEWIRE_RESET_BYTES; i++)
+    {
+        hard_spi_write_byte(0x00);
+    }
+#endif
+    // 软实现分支若恢复使用，请在此处连续拉低数据线 300us 以上
+}
+
 /******************************** SPI硬实现 ********************************/
 #if SPI_HARD_SOFT
 // 初始化
 static void hard_spi_init()
 {
-    // SCL
-    rcu_periph_clock_enable(SPI_SCL_RCU);
-    gpio_mode_set(SPI_SCL_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, SPI_SCL_PIN);
-    gpio_af_set(SPI_SCL_PORT, SPI_SCL_AF, SPI_SCL_PIN);
-    // MOSI
+    // 只配 MOSI(PB15)：WS2812 是单向单线器件，SCK/MISO 不接、也不能配(见文件头注释)
     rcu_periph_clock_enable(SPI_MOSI_RCU);
     gpio_mode_set(SPI_MOSI_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, SPI_MOSI_PIN);
+    gpio_output_options_set(SPI_MOSI_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_MAX, SPI_MOSI_PIN);
     gpio_af_set(SPI_MOSI_PORT, SPI_MOSI_AF, SPI_MOSI_PIN);
-    // MISO
-    rcu_periph_clock_enable(SPI_MISO_RCU);
-    gpio_mode_set(SPI_MISO_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, SPI_MISO_PIN);
-    gpio_af_set(SPI_MISO_PORT, SPI_MISO_AF, SPI_MISO_PIN);
 
     // 初始化SPI
     spi_i2s_deinit(SPI_NUM);
