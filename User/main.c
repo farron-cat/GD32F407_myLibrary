@@ -16,6 +16,7 @@
 #include "bsp_ntc.h"
 #include "bsp_pcf8563.h"
 #include "bsp_spi_oled.h"
+#include "bsp_ws2812_rgb_leds.h"
 
 #include "msp_adc.h"
 #include "msp_exti.h"
@@ -23,6 +24,7 @@
 #include "msp_iic.h"
 #include "msp_rtc.h"
 #include "msp_spi.h"
+#include "msp_spi_onewire.h"
 #include "msp_uart.h"
 #include "msp_wwdgt.h"
 
@@ -166,6 +168,8 @@ int main(void)
     msp_adc_init();
     // SPI
     msp_spi_init();
+    // SPI1的单线通信专为WS2812
+    // 初始化放在了bsp_ws2812_rgb_leds_init()中
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -191,6 +195,8 @@ int main(void)
     bsp_adkey_init();
     // 旋转编码器
     bsp_ec12d_init();
+    // WS2812 RGB LED
+    bsp_ws2812_rgb_leds_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -233,6 +239,9 @@ int main(void)
 
     // FLASH 测试
     flash_test();
+
+    // WS2812 RGB
+    bsp_ws2812_rgb_leds_send();
 
     char buf[64] = {0};
 

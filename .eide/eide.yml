@@ -35,6 +35,7 @@ virtualFolder:
         - path: Driver/bsp_keypad/bsp_keypad.c
         - path: Driver/bsp_adkey/bsp_adkey.c
         - path: Driver/bsp_ec12d/bsp_ec12d.c
+        - path: Driver/bsp_ws2812_rgb_leds/bsp_ws2812_rgb_leds.c
       folders: []
     - name: Firmware
       files:
@@ -69,6 +70,7 @@ virtualFolder:
         - path: Hardware/msp_adc/msp_adc.c
         - path: Hardware/msp_fwdgt/msp_fwdgt.c
         - path: Hardware/msp_wwdgt/msp_wwdgt.c
+        - path: Hardware/msp_spi/msp_spi_onewire.c
       folders: []
 dependenceList: []
 outDir: build
@@ -109,6 +111,7 @@ targets:
         - Driver/bsp_keypad
         - Driver/bsp_adkey
         - Driver/bsp_ec12d
+        - Driver/bsp_ws2812_rgb_leds
       libList: []
     excludeList: []
     settings:
