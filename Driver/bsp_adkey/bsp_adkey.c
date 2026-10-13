@@ -1,6 +1,7 @@
 #include "bsp_adkey.h"
 #include "msp_adc.h"
 #include "systick.h"
+#include "util_weak.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -14,10 +15,6 @@ static ADKEY_PARAM adkeys[] = {
     {2, KEY2_PRESS_ENCODE, ADKEY_IDLE, 0},
     {3, KEY3_PRESS_ENCODE, ADKEY_IDLE, 0},
 };
-
-#ifndef __weak
-#define __weak __attribute__((weak)) // GCC / armclang
-#endif
 
 __weak void on_adkey_click(uint8_t id)
 {

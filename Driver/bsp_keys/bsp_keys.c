@@ -1,4 +1,5 @@
 #include "bsp_keys.h"
+#include "util_weak.h"
 
 // 抽取出按键引脚参数便于修改
 KEY_PARAM keys[] = {
@@ -15,9 +16,6 @@ static uint8_t preStas = 0xFF;
 #define SET_HIGH(i) (preStas |= (0x01 << i))
 #define SET_LOW(i) (preStas &= ~(0x01 << i))
 
-#ifndef __weak
-#define __weak __attribute__((weak)) // GCC / armclang
-#endif
 // 按键按下回调
 // 弱引用  可以被其他文件重定义
 __weak void on_key_press(KEY_NUM key)

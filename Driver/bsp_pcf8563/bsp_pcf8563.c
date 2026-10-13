@@ -1,5 +1,6 @@
 #include "bsp_pcf8563.h"
 #include "msp_iic.h"
+#include "util_weak.h"
 #include <stdio.h>
 
 // BCD转十进制，十进制转BCD
@@ -134,10 +135,6 @@ void bsp_pcf8563_timer_clear(void)
     sta_c2 &= ~(1 << 2); // TF = 0
     msp_iic_write_nbyte(PCF8563_ADDR, 0x01, &sta_c2, 1);
 }
-
-#ifndef __weak
-#define __weak __attribute__((weak)) // GCC / armclang
-#endif
 
 // 闹钟回调函数
 __weak void on_rtc_alarm(void)

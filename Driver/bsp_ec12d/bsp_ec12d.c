@@ -1,14 +1,11 @@
 #include "bsp_ec12d.h"
 #include "systick.h"
+#include "util_weak.h"
 #include <stdio.h>
 
 // A PD11 EXTI11
 // B PD13
 // D PD15 EXTI15
-
-#ifndef __weak
-#define __weak __attribute__((weak)) // GCC / armclang
-#endif
 
 __weak void on_ec12d_clockwise()
 {

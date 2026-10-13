@@ -1,4 +1,5 @@
 #include "msp_uart.h"
+#include "util_weak.h"
 #include <stdio.h>
 
 USART_HandleTypeDef husart0 = {

@@ -1,5 +1,6 @@
 #include "msp_rtc.h"
 #include "systick.h"
+#include "util_weak.h"
 #include <stdio.h>
 
 static RTC_CLOCK_SOURCE rtc_clock_source = HXTAL;
@@ -161,9 +162,6 @@ void msp_rtc_alarm_config(Time *time)
     rtc_alarm_enable(RTC_ALARM0);
 }
 
-#ifndef __weak
-#define __weak __attribute__((weak)) // GCC / armclang
-#endif
 __weak void on_rtc_alarm()
 {
     printf("============ alarm ============\n");
