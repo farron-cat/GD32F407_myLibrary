@@ -1,68 +1,77 @@
 #include "bsp_ws2812_rgb_leds.h"
 #include "msp_spi_onewire.h"
-#include <string.h>
 
-// ============ 编码原理(与 SPI 时钟强绑定，改 SPI 时钟必须重算表) ============
+// ============ 编码原理(与 SPI 时钟强绑定，改 SPI 时钟必须重算) ============
 // SPI1 = APB1 42MHz ÷ SPI_PSC_4 = 10.5MHz → 1 个 SPI 位 = 95.24ns
 // 1 个 WS2812 位 = 13 个 SPI 位 = 1238ns ≈ 1.25us
 //   位'0' -> 1111 0000 0000 0  T0H=381ns(规格400±150)  T0L=857ns(规格850±150)
 //   位'1' -> 1111 1111 0000 0  T1H=762ns(规格800±150)  T1L=476ns(规格450±150)
 // 1 个颜色字节 = 8 位 = 104 个 SPI 位 = 13 字节(104 正好是 8 的整数倍)
-// 1 颗灯(GRB) = 3 个颜色字节 = 39 字节
-// 重算方法: 把每个 bit 展开成 13 位, 按 MSB 先行拼成字节流
-//   cell = {0 : 0b1111000000000, 1 : 0b1111111100000}
+// 1 颗灯(GRB) = 3 个颜色字节 = 39 字节   →   4 颗灯 = 156 字节
+// 任意颜色不用预生成表，由 ws2812_pack_byte() 现场展开(见下)
 
-// 0x00 的 13 字节 = 8 个 '0' 位单元
-static const uint8_t ws2812_byte_00[13] = {
-    0xF0,
-    0x07,
-    0x80,
-    0x3C,
-    0x01,
-    0xE0,
-    0x0F,
-    0x00,
-    0x78,
-    0x03,
-    0xC0,
-    0x1E,
-    0x00,
-};
+// 1 个 WS2812 位展开成的 13 个 SPI 位
+#define WS2812_CELL_0 0x1E00u // 1111 0000 0000 0
+#define WS2812_CELL_1 0x1FE0u // 1111 1111 0000 0
 
-// 0xFF 的 13 字节 = 8 个 '1' 位单元
-static const uint8_t ws2812_byte_FF[13] = {
-    0xFF,
-    0x07,
-    0xF8,
-    0x3F,
-    0xC1,
-    0xFE,
-    0x0F,
-    0xF0,
-    0x7F,
-    0x83,
-    0xFC,
-    0x1F,
-    0xE0,
-};
+#define WS2812_BYTE_BITS   13                           // 1 个 WS2812 位 = 13 个 SPI 位
+#define WS2812_COLOR_BYTES (8 * WS2812_BYTE_BITS / 8)   // 1 个颜色字节 = 13 字节
+#define WS2812_LED_NUM     4                            // 灯珠数量
+#define WS2812_LED_BYTES   (3 * WS2812_COLOR_BYTES)     // 1 颗灯(GRB) = 39 字节
 
-// 1 颗灯的数据：G R B 三个颜色字节的展开流
-static uint8_t buff[39] = {0};
+// 4 颗灯的数据(每颗 39 字节)，bsp_ws2812_rgb_leds_send() 一次全发
+static uint8_t buff[WS2812_LED_NUM * WS2812_LED_BYTES] = {0};
 
-// 换颜色(GRB 顺序)：在 init 里按下面组合做 memcpy 即可
-//   红 G=00 R=FF B=00   绿 G=FF R=00 B=00   蓝 G=00 R=00 B=FF
-//   白 G=FF R=FF B=FF   黑 G=00 R=00 B=00
-// 其它颜色值(非 0x00/0xFF)需要按上面的公式重新展开成 13 位再打包
+// 把 1 个颜色字节(8 位)现场展开成 13 个 SPI 字节(高位先行)
+//   做法：依次把 8 个「13 位单元」拼进 32 位累加器，每凑够 8 位就吐 1 个字节
+//   自检：0x00 → F0 07 80 3C 01 E0 0F 00 78 03 C0 1E 00
+//         0xFF → FF 07 F8 3F C1 FE 0F F0 7F 83 FC 1F E0
+static void ws2812_pack_byte(uint8_t dat, uint8_t *out)
+{
+    uint32_t acc = 0;  // 位累加器(只有低 bits 位是有效数据)
+    uint8_t bits = 0;  // acc 里的有效位数
+    uint8_t n = 0;     // 已输出的字节数
+
+    for (int8_t i = 7; i >= 0; i--)
+    {
+        acc = (acc << WS2812_BYTE_BITS) | ((dat & (1 << i)) ? WS2812_CELL_1 : WS2812_CELL_0);
+        bits += WS2812_BYTE_BITS;
+        while (bits >= 8)
+        {
+            bits -= 8;
+            out[n++] = (uint8_t)((acc >> bits) & 0xFF);
+        }
+    }
+}
+
+// 设置第 index 颗灯的颜色(0 ~ WS2812_LED_NUM-1)，rgb 形如 0xFF0000(红)
+// 只改内存里的数据，要看到效果还得调用 bsp_ws2812_rgb_leds_send()
+// WS2812 的发送顺序是 GRB，所以把 rgb 拆成 R/G/B 之后按 G、R、B 顺序打包
+void bsp_ws2812_rgb_leds_set_color(uint8_t index, uint32_t rgb)
+{
+    if (index >= WS2812_LED_NUM)
+        return;
+
+    uint8_t *p = &buff[index * WS2812_LED_BYTES];
+    uint8_t r = (uint8_t)(rgb >> 16);
+    uint8_t g = (uint8_t)(rgb >> 8);
+    uint8_t b = (uint8_t)rgb;
+
+    ws2812_pack_byte(g, &p[0]);                      // G
+    ws2812_pack_byte(r, &p[WS2812_COLOR_BYTES]);     // R
+    ws2812_pack_byte(b, &p[2 * WS2812_COLOR_BYTES]); // B
+}
 
 void bsp_ws2812_rgb_leds_init(void)
 {
     msp_spi_onewire_init();
 
-    // 组装 1 颗灯的数据：G=0x00 / R=0xFF / B=0x00 → 红
-    // (换颜色只改这三行的组合，见文件头"换颜色"说明)
-    memcpy(&buff[0], ws2812_byte_00, sizeof(ws2812_byte_00));  // G
-    memcpy(&buff[13], ws2812_byte_FF, sizeof(ws2812_byte_FF)); // R
-    memcpy(&buff[26], ws2812_byte_00, sizeof(ws2812_byte_00)); // B
+    // 默认 4 颗全红(0xFF0000)，保持原来的现象；
+    // 想单独改某颗灯，用 bsp_ws2812_rgb_leds_set_color()
+    for (uint8_t i = 0; i < WS2812_LED_NUM; i++)
+    {
+        bsp_ws2812_rgb_leds_set_color(i, 0xFF0000);
+    }
 }
 
 void bsp_ws2812_rgb_leds_send(void)
@@ -78,12 +87,9 @@ void bsp_ws2812_rgb_leds_send(void)
     //    一旦落在位流中间就会把某一位的高电平拉长 → 该位被从 '0' 读成 '1' → 灯乱色
     __disable_irq();
 
-    for (uint8_t j = 0; j < 4; j++)
+    for (uint16_t i = 0; i < sizeof(buff); i++)
     {
-        for (uint8_t i = 0; i < 39; i++)
-        {
-            msp_spi_onewire_write_byte(buff[i]);
-        }
+        msp_spi_onewire_write_byte(buff[i]);
     }
 
     __enable_irq();

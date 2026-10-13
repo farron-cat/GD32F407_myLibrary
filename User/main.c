@@ -241,6 +241,11 @@ int main(void)
     flash_test();
 
     // WS2812 RGB
+    bsp_ws2812_rgb_leds_set_color(0, 0xFF0000); // µÚ 1 ¿Å ºì
+    bsp_ws2812_rgb_leds_set_color(1, 0x00FF00); // µÚ 2 ¿Å ÂÌ
+    bsp_ws2812_rgb_leds_set_color(2, 0x0000FF); // µÚ 3 ¿Å À¶
+    bsp_ws2812_rgb_leds_set_color(3, 0xFFFFFF); // µÚ 4 ¿Å °×
+
     bsp_ws2812_rgb_leds_send();
 
     char buf[64] = {0};
