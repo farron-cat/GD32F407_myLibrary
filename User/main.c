@@ -226,7 +226,6 @@ int main(void)
 
     // IIC屏幕显示图片
     bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
-
     bsp_iic_oled_refresh();
 
     // SPI屏幕显示图片
@@ -237,27 +236,10 @@ int main(void)
     // FLASH 测试
     flash_test();
 
-    char buf[64] = {0};
-
-    uint8_t cnt = 0;
-    uint32_t num = 0;
-
-    // 共阳段码表，索引 0~9
-    const uint8_t seg_tab[10] = {
-        SEG_0, SEG_1, SEG_2, SEG_3, SEG_4,
-        SEG_5, SEG_6, SEG_7, SEG_8, SEG_9};
-
-    uint16_t number = 0;   // 当前显示的数字
-    uint32_t ms_count = 0; // 毫秒计数
-
-    // 先刷新一次缓冲区，让数码管上电就显示 0000
+    // 数码管测试
+    // 先刷新一次缓冲区，让数码管上电就显示 0000 0000
     clear_buffer();
-    send_code_to_buffer(seg_tab[0], 0); // 千位
-    send_code_to_buffer(seg_tab[0], 1); // 百位
-    send_code_to_buffer(seg_tab[0], 2); // 十位
-    send_code_to_buffer(seg_tab[0], 3); // 个位
-
-    uint64_t last_cnt = 0;
+    bsp_digital_leds_all_zero();
 
     while (1)
     {
@@ -280,6 +262,9 @@ int main(void)
         // IIC屏幕图片上叠加时间
         oled_show_rtc(&time);
 
+        // 数码管测试 每秒加1
+        bsp_digital_leds_test_tick();
+
         // 串口打印时间
         // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
         //        time.year % 100, time.month, time.day,
@@ -297,9 +282,5 @@ int main(void)
         // int key = KeypadScan();
         // if (key != 255)
         //     printf("key: %d\n", key);
-
-        cnt++;
-
-        bsp_digital_leds_test_tick();
     }
 }

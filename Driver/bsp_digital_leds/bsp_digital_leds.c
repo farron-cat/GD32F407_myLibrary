@@ -15,7 +15,6 @@
 #define SRCLK_H() gpio_bit_set(DIGLED_PORT, SRCLK_PIN)
 #define SRCLK_L() gpio_bit_reset(DIGLED_PORT, SRCLK_PIN)
 
-#define DIG_NUM 8
 unsigned char displayBuffer[DIG_NUM];
 const unsigned char digCodeTable[DIG_NUM] =
     {
@@ -29,7 +28,7 @@ const unsigned char digCodeTable[DIG_NUM] =
         DIG_8, /* position 7 → 第 8 位 */
 };
 // 共阳段码表，索引 0~9
-const uint8_t seg_tab[10] =
+const uint8_t segCodeTable[10] =
     {
         SEG_0, SEG_1, SEG_2, SEG_3, SEG_4,
         SEG_5, SEG_6, SEG_7, SEG_8, SEG_9};
@@ -148,10 +147,10 @@ void bsp_digital_leds_show_number(uint16_t num)
     if (num > 9999)
         num = 9999;
 
-    send_code_to_buffer(seg_tab[(num / 1000) % 10], 4); // 千位
-    send_code_to_buffer(seg_tab[(num / 100) % 10], 5);  // 百位
-    send_code_to_buffer(seg_tab[(num / 10) % 10], 6);   // 十位
-    send_code_to_buffer(seg_tab[num % 10], 7);          // 个位
+    send_code_to_buffer(segCodeTable[(num / 1000) % 10], 4); // 千位
+    send_code_to_buffer(segCodeTable[(num / 100) % 10], 5);  // 百位
+    send_code_to_buffer(segCodeTable[(num / 10) % 10], 6);   // 十位
+    send_code_to_buffer(segCodeTable[num % 10], 7);          // 个位
 }
 
 // 数码管测试：每 1 秒加 1
@@ -168,4 +167,16 @@ void bsp_digital_leds_test_tick(void)
         }
         bsp_digital_leds_show_number(number);
     }
+}
+
+void bsp_digital_leds_all_zero(void)
+{
+    send_code_to_buffer(segCodeTable[0], 0);
+    send_code_to_buffer(segCodeTable[0], 1);
+    send_code_to_buffer(segCodeTable[0], 2);
+    send_code_to_buffer(segCodeTable[0], 3);
+    send_code_to_buffer(segCodeTable[0], 5);
+    send_code_to_buffer(segCodeTable[0], 6);
+    send_code_to_buffer(segCodeTable[0], 7);
+    send_code_to_buffer(segCodeTable[0], 8);
 }

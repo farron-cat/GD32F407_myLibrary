@@ -49,6 +49,13 @@
 #define DIG_7      0x40
 #define DIG_8      0x80
 
+#define DIG_NUM    8
+
+// 位码表
+extern const unsigned char digCodeTable[DIG_NUM];
+// 共阳段码表，索引 0~9
+extern const uint8_t segCodeTable[10];
+
 void bsp_digital_leds_init(void);
 
 void bsp_digital_leds_send_byte(uint8_t dat);
@@ -64,6 +71,8 @@ void bsp_digital_leds_scan(void);
 uint8_t bsp_digital_leds_is_1s(void);
 
 void bsp_digital_leds_show_number(uint16_t num);
+
+void bsp_digital_leds_all_zero(void);
 
 void bsp_digital_leds_test_tick(void);
 
