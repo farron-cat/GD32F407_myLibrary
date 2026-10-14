@@ -7,6 +7,7 @@
 #include "bsp_adkey.h"
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
+#include "bsp_digital_leds.h"
 #include "bsp_ec12d.h"
 #include "bsp_flash.h"
 #include "bsp_iic_oled.h"
@@ -191,6 +192,8 @@ int main(void)
     bsp_adkey_init();
     // 旋转编码器
     bsp_ec12d_init();
+    // 数码管初始化
+    bsp_digital_leds_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -238,6 +241,24 @@ int main(void)
 
     uint8_t cnt = 0;
     uint32_t num = 0;
+
+    // 共阳段码表，索引 0~9
+    const uint8_t seg_tab[10] = {
+        SEG_0, SEG_1, SEG_2, SEG_3, SEG_4,
+        SEG_5, SEG_6, SEG_7, SEG_8, SEG_9};
+
+    uint16_t number = 0;   // 当前显示的数字
+    uint32_t ms_count = 0; // 毫秒计数
+
+    // 先刷新一次缓冲区，让数码管上电就显示 0000
+    clear_buffer();
+    send_code_to_buffer(seg_tab[0], 0); // 千位
+    send_code_to_buffer(seg_tab[0], 1); // 百位
+    send_code_to_buffer(seg_tab[0], 2); // 十位
+    send_code_to_buffer(seg_tab[0], 3); // 个位
+
+    uint64_t last_cnt = 0;
+
     while (1)
     {
         // PCF8563 中断事件处理：原在 EXTI5 中断中执行，移到主循环以避免软件 IIC 重入
@@ -278,5 +299,7 @@ int main(void)
         //     printf("key: %d\n", key);
 
         cnt++;
+
+        bsp_digital_leds_test_tick();
     }
 }
