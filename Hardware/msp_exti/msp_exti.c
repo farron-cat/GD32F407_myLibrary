@@ -148,6 +148,9 @@ void EXTI3_IRQHandler()
 // RTC(PCF8563) 中断标志：中断只置位，IIC 处理交给主循环，避免打断主循环正在进行的软件 IIC 时序
 volatile uint8_t g_rtc_int_flag = 0;
 
+// 触摸按键(SC12B) 中断标志：中断只置位，IIC 处理交给主循环，避免打断主循环正在进行的软件 IIC 时序
+volatile uint8_t g_touch_key_int_flag = 0;
+
 void EXTI5_9_IRQHandler()
 {
 #if USE_EXTI5
@@ -165,7 +168,8 @@ void EXTI5_9_IRQHandler()
     {
         exti_interrupt_flag_clear(EXTI_8);
 
-        on_touch_key_interrupt();
+        // 只置标志，不在中断里做 IIC / printf
+        g_touch_key_int_flag = 1;
     }
 #endif
 }

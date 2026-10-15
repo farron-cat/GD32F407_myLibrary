@@ -47,6 +47,7 @@
 
 void bsp_touch_key_init(void);
 
+// 主循环检测到 g_touch_key_int_flag 后调用
 void on_touch_key_interrupt(void);
 
 // 回调函数

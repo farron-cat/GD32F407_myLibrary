@@ -149,7 +149,7 @@ __weak void on_rtc_timer(void)
 
 // PCF8563 中断事件处理
 // 不再在 EXTI5 中断里执行，改由主循环检测到 g_rtc_int_flag 后调用（避免软件 IIC 重入）
-void on_rtc_int(void)
+void on_rtc_interrupt(void)
 {
     uint8_t sta = 0;
 

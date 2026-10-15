@@ -30,22 +30,22 @@
 
 #include "bmp.h"
 
-// ´®¿Ú½ÓÊÕ»Øµ÷
+// ä¸²å£æ¥æ”¶å›è°ƒ
 void on_usart_recv(USART_HandleTypeDef *huart)
 {
     huart->recv_buff[huart->recv_length] = '\0';
     if (huart->usartx == USART0)
     {
         printf("usart0_recv:%s\n", huart->recv_buff);
-        // // ÅäÖÃÊ£Óà²ÎÊı
+        // // é…ç½®å‰©ä½™å‚æ•°
         // dma_periph_address_config(DMA1, DMA_CH0, (uint32_t)huart->recv_buff);
         // dma_transfer_number_config(DMA1, DMA_CH0, huart->recv_length);
-        // // Æô¶¯DMA´«Êä
+        // // å¯åŠ¨DMAä¼ è¾“
         // dma_channel_enable(DMA1, DMA_CH0);
     }
 }
 
-// IIC OLED ²âÊÔ
+// IIC OLED æµ‹è¯•
 void oled_test(void)
 {
     uint8_t t = ' ';
@@ -54,18 +54,18 @@ void oled_test(void)
     bsp_iic_oled_refresh();
     delay_1ms(500);
     bsp_iic_oled_clear();
-    bsp_iic_oled_show_chinese(0, 0, 0, 16, 1);   // ÖĞ
-    bsp_iic_oled_show_chinese(18, 0, 1, 16, 1);  // ¾°
-    bsp_iic_oled_show_chinese(36, 0, 2, 16, 1);  // Ô°
-    bsp_iic_oled_show_chinese(54, 0, 3, 16, 1);  // µç
-    bsp_iic_oled_show_chinese(72, 0, 4, 16, 1);  // ×Ó
-    bsp_iic_oled_show_chinese(90, 0, 5, 16, 1);  // ¼¼
-    bsp_iic_oled_show_chinese(108, 0, 6, 16, 1); // Êõ
+    bsp_iic_oled_show_chinese(0, 0, 0, 16, 1);   // ä¸­
+    bsp_iic_oled_show_chinese(18, 0, 1, 16, 1);  // æ™¯
+    bsp_iic_oled_show_chinese(36, 0, 2, 16, 1);  // å›­
+    bsp_iic_oled_show_chinese(54, 0, 3, 16, 1);  // ç”µ
+    bsp_iic_oled_show_chinese(72, 0, 4, 16, 1);  // å­
+    bsp_iic_oled_show_chinese(90, 0, 5, 16, 1);  // æŠ€
+    bsp_iic_oled_show_chinese(108, 0, 6, 16, 1); // æœ¯
     bsp_iic_oled_show_string(8, 16, "ZHONGJINGYUAN", 16, 1);
     bsp_iic_oled_show_string(20, 32, "2014/05/01", 16, 1);
     bsp_iic_oled_show_string(0, 48, "ASCII:", 16, 1);
     bsp_iic_oled_show_string(63, 48, "CODE:", 16, 1);
-    bsp_iic_oled_show_char(48, 48, t, 16, 1); // ÏÔÊ¾ASCII×Ö·û
+    bsp_iic_oled_show_char(48, 48, t, 16, 1); // æ˜¾ç¤ºASCIIå­—ç¬¦
     t++;
     if (t > '~')
         t = ' ';
@@ -74,91 +74,91 @@ void oled_test(void)
 
     delay_1ms(500);
     bsp_iic_oled_clear();
-    bsp_iic_oled_show_chinese(0, 0, 0, 16, 1);   // 16*16 ÖĞ
-    bsp_iic_oled_show_chinese(16, 0, 0, 24, 1);  // 24*24 ÖĞ
-    bsp_iic_oled_show_chinese(24, 20, 0, 32, 1); // 32*32 ÖĞ
-    bsp_iic_oled_show_chinese(64, 0, 0, 64, 1);  // 64*64 ÖĞ
+    bsp_iic_oled_show_chinese(0, 0, 0, 16, 1);   // 16*16 ä¸­
+    bsp_iic_oled_show_chinese(16, 0, 0, 24, 1);  // 24*24 ä¸­
+    bsp_iic_oled_show_chinese(24, 20, 0, 32, 1); // 32*32 ä¸­
+    bsp_iic_oled_show_chinese(64, 0, 0, 64, 1);  // 64*64 ä¸­
     bsp_iic_oled_refresh();
 
     delay_1ms(500);
     bsp_iic_oled_clear();
-    bsp_iic_oled_show_string(0, 0, "ABC", 8, 1);   // 6*8 ¡°ABC¡±
-    bsp_iic_oled_show_string(0, 8, "ABC", 12, 1);  // 6*12 ¡°ABC¡±
-    bsp_iic_oled_show_string(0, 20, "ABC", 16, 1); // 8*16 ¡°ABC¡±
-    bsp_iic_oled_show_string(0, 36, "ABC", 24, 1); // 12*24 ¡°ABC¡±
+    bsp_iic_oled_show_string(0, 0, "ABC", 8, 1);   // 6*8 â€œABCâ€
+    bsp_iic_oled_show_string(0, 8, "ABC", 12, 1);  // 6*12 â€œABCâ€
+    bsp_iic_oled_show_string(0, 20, "ABC", 16, 1); // 8*16 â€œABCâ€
+    bsp_iic_oled_show_string(0, 36, "ABC", 24, 1); // 12*24 â€œABCâ€
     bsp_iic_oled_refresh();
 
     delay_1ms(500);
     bsp_iic_oled_scroll_display(11, 4, 1);
 }
 
-// OLED ÏÔÊ¾ RTC Ê±¼ä
+// OLED æ˜¾ç¤º RTC æ—¶é—´
 void oled_show_rtc(Time_pcf *t)
 {
     char buf[32] = {0};
 
-    // 1. ÏÈÏÔÊ¾ BMP1 Õû·ù±³¾°£¨128x64£©
-    //    ÕâÒ»²½»á¸²¸ÇÉÏ´Î GRAM£¬±£Ö¤±³¾°¸É¾»
+    // 1. å…ˆæ˜¾ç¤º BMP1 æ•´å¹…èƒŒæ™¯ï¼ˆ128x64ï¼‰
+    //    è¿™ä¸€æ­¥ä¼šè¦†ç›–ä¸Šæ¬¡ GRAMï¼Œä¿è¯èƒŒæ™¯å¹²å‡€
     bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
 
-    // 2. ÔÚ BMP1 Ô­±¾ "2014/05/01" µÄÎ»ÖÃ¸²¸ÇÏÔÊ¾ÈÕÆÚ
-    //    Ô­²âÊÔ´úÂëÓÃµÄÊÇ (20, 32)£¬ÕâÀï±£³ÖÒ»ÖÂ
+    // 2. åœ¨ BMP1 åŸæœ¬ "2014/05/01" çš„ä½ç½®è¦†ç›–æ˜¾ç¤ºæ—¥æœŸ
+    //    åŸæµ‹è¯•ä»£ç ç”¨çš„æ˜¯ (20, 32)ï¼Œè¿™é‡Œä¿æŒä¸€è‡´
     sprintf(buf, "20%02d/%02d/%02d", t->year % 100, t->month, t->day);
     bsp_iic_oled_show_string(36, 38, buf, 8, 1);
 
-    // 3. ÔÚÈÕÆÚÓÒ²àÏÔÊ¾ĞÇÆÚ
+    // 3. åœ¨æ—¥æœŸå³ä¾§æ˜¾ç¤ºæ˜ŸæœŸ
     // sprintf(buf, "W%d", t->week);
     // OLED_ShowString(100, 32, buf, 8, 1);
 
-    // 4. ÔÚ BMP1 Ô­±¾ "ASCII: CODE:" µÄÎ»ÖÃ¸²¸ÇÏÔÊ¾Ê±¼ä
-    //    Ô­²âÊÔ´úÂëÓÃµÄÊÇ (0, 48) ºÍ (63, 48)£¬ÕâÀï°ÑÊ±·ÖÃë·Åµ½ÖĞ¼ä
+    // 4. åœ¨ BMP1 åŸæœ¬ "ASCII: CODE:" çš„ä½ç½®è¦†ç›–æ˜¾ç¤ºæ—¶é—´
+    //    åŸæµ‹è¯•ä»£ç ç”¨çš„æ˜¯ (0, 48) å’Œ (63, 48)ï¼Œè¿™é‡ŒæŠŠæ—¶åˆ†ç§’æ”¾åˆ°ä¸­é—´
     sprintf(buf, "%02d:%02d:%02d", t->hour, t->minutes, t->second);
     bsp_iic_oled_show_string(36, 2, buf, 8, 1);
 
-    // 5. Í³Ò»Ë¢ĞÂµ½ OLED
+    // 5. ç»Ÿä¸€åˆ·æ–°åˆ° OLED
     bsp_iic_oled_refresh();
 }
 
-// FLASH ²âÊÔ
+// FLASH æµ‹è¯•
 void flash_test(void)
 {
     unsigned char buff[20] = {0};
-    // »ñÈ¡GD25Q32µÄÉè±¸ID
+    // è·å–GD25Q32çš„è®¾å¤‡ID
     printf("ID = %X\r\n", bsp_flash_read_id());
 
-    // ¶ÁÈ¡0µØÖ·³¤¶ÈÎª7¸ö×Ö½ÚµÄÊı¾İµ½buff
+    // è¯»å–0åœ°å€é•¿åº¦ä¸º7ä¸ªå­—èŠ‚çš„æ•°æ®åˆ°buff
     bsp_flash_read(buff, 0, 10);
-    // Êä³ö¶ÁÈ¡µ½µÄÊı¾İ
+    // è¾“å‡ºè¯»å–åˆ°çš„æ•°æ®
     printf("buff: %s\r\n", buff);
     delay_1ms(200);
-    // Íù0µØÖ·Ğ´Èë6¸ö×Ö½ÚµÄÊı¾İ ¡°hello¡±
+    // å¾€0åœ°å€å†™å…¥6ä¸ªå­—èŠ‚çš„æ•°æ® â€œhelloâ€
     bsp_flash_write((uint8_t *)"hello", 0, 10);
 
-    // µÈ´ıĞ´ÈëÍê³É
+    // ç­‰å¾…å†™å…¥å®Œæˆ
     delay_1ms(200);
 
-    // ¶ÁÈ¡0µØÖ·³¤¶ÈÎª7¸ö×Ö½ÚµÄÊı¾İµ½buff
+    // è¯»å–0åœ°å€é•¿åº¦ä¸º7ä¸ªå­—èŠ‚çš„æ•°æ®åˆ°buff
     bsp_flash_read(buff, 0, 10);
-    // Êä³ö¶ÁÈ¡µ½µÄÊı¾İ
+    // è¾“å‡ºè¯»å–åˆ°çš„æ•°æ®
     printf("buff: %s\r\n", buff);
 
     delay_1ms(1000);
 }
 
-//============ Ö÷ º¯ Êı ============
+//============ ä¸» å‡½ æ•° ============
 int main(void)
 {
-    // ÅäÖÃÕû¸ö¹¤³ÌÓÅÏÈ¼¶·Ö×é ÇÀÕ¼:0~3  ÏìÓ¦:0~3
+    // é…ç½®æ•´ä¸ªå·¥ç¨‹ä¼˜å…ˆçº§åˆ†ç»„ æŠ¢å :0~3  å“åº”:0~3
     nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
-    // Ê±ÖÓ±¶Æµ(È«¾ÖÅäÖÃ ËùÓĞ¶¨Ê±Æ÷¶¼ÊÇ168Mhz)
+    // æ—¶é’Ÿå€é¢‘(å…¨å±€é…ç½® æ‰€æœ‰å®šæ—¶å™¨éƒ½æ˜¯168Mhz)
     rcu_timer_clock_prescaler_config(RCU_TIMER_PSC_MUL4);
-    // ÏµÍ³µÎ´ğÊ±ÖÓ³õÊ¼»¯
+    // ç³»ç»Ÿæ»´ç­”æ—¶é’Ÿåˆå§‹åŒ–
     systick_config();
 
-    //============ Æ¬ÉÏÍâÉè ============
-    // USART0ºÍUSART2³õÊ¼»¯
+    //============ ç‰‡ä¸Šå¤–è®¾ ============
+    // USART0å’ŒUSART2åˆå§‹åŒ–
     msp_uart_init();
-    // EXTI0 PA0 ºÍ EXTI3 PC3³õÊ¼»¯
+    // EXTI0 PA0 å’Œ EXTI3 PC3åˆå§‹åŒ–
     msp_exti_init();
     // RTC
     msp_rtc_init(HXTAL);
@@ -169,17 +169,17 @@ int main(void)
     // SPI
     msp_spi_init();
 
-    //============ Æ¬ÍâÍâÉè ============
-    // LEDµÆ×é³õÊ¼»¯
+    //============ ç‰‡å¤–å¤–è®¾ ============
+    // LEDç¯ç»„åˆå§‹åŒ–
     bsp_leds_config();
-    // °´¼ü³õÊ¼»¯
+    // æŒ‰é”®åˆå§‹åŒ–
     bsp_keys_config();
-    // ·äÃùÆ÷³õÊ¼»¯
+    // èœ‚é¸£å™¨åˆå§‹åŒ–
     bsp_buzzer_init();
-    // oled³õÊ¼»¯
+    // oledåˆå§‹åŒ–
     bsp_iic_oled_init();
     bsp_spi_oled_init();
-    // pcf8563³õÊ¼»¯
+    // pcf8563åˆå§‹åŒ–
     bsp_pcf8563_init();
     // flash
     bsp_flash_init();
@@ -187,29 +187,29 @@ int main(void)
     bsp_ntc_init();
     // 188LED
     bsp_188_leds_init();
-    // ¾ØÕó¼üÅÌ³õÊ¼»¯
+    // çŸ©é˜µé”®ç›˜åˆå§‹åŒ–
     // bsp_keypad_init();
     // ADKEY
     bsp_adkey_init();
-    // Ğı×ª±àÂëÆ÷
+    // æ—‹è½¬ç¼–ç å™¨
     bsp_ec12d_init();
-    // ÊıÂë¹Ü³õÊ¼»¯
+    // æ•°ç ç®¡åˆå§‹åŒ–
     bsp_digital_leds_init();
-    // ´¥Ãş°´¼ü
+    // è§¦æ‘¸æŒ‰é”®
     bsp_touch_key_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
 
-    // ¶ÀÁ¢¿´ÃÅ¹·
+    // ç‹¬ç«‹çœ‹é—¨ç‹—
     // msp_fwdgt_config();
-    // ´°¿Ú¿´ÃÅ¹·
-    // msp_wwdgt_config(); // Ç°ÃæµÄ³õÊ¼»¯»áÏûºÄÊ±¼ä
+    // çª—å£çœ‹é—¨ç‹—
+    // msp_wwdgt_config(); // å‰é¢çš„åˆå§‹åŒ–ä¼šæ¶ˆè€—æ—¶é—´
 
     Time_pcf time;
     Alarm alarm;
 
-    // ÉèÖÃÊ±¼ä
+    // è®¾ç½®æ—¶é—´
     time.year = 2026;
     time.month = 9;
     time.day = 28;
@@ -219,7 +219,7 @@ int main(void)
     time.second = 55;
     bsp_pcf8563_set_time(&time);
 
-    // ÉèÖÃÄÖÖÓ 15:00 ÖÜÈÕ
+    // è®¾ç½®é—¹é’Ÿ 15:00 å‘¨æ—¥
     alarm.hour = 15;
     alarm.min = 0;
     alarm.day = 28;
@@ -227,61 +227,68 @@ int main(void)
     bsp_pcf8563_set_alarm(&alarm);
     bsp_pcf8563_alarm_enable();
 
-    // IICÆÁÄ»ÏÔÊ¾Í¼Æ¬
+    // IICå±å¹•æ˜¾ç¤ºå›¾ç‰‡
     bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
     bsp_iic_oled_refresh();
 
-    // SPIÆÁÄ»ÏÔÊ¾Í¼Æ¬
+    // SPIå±å¹•æ˜¾ç¤ºå›¾ç‰‡
     // bsp_spi_oled_display_128x64(BMP1);
-    // SPIÆÁÄ»ÏÔÊ¾ÖĞÎÄ
-    bsp_spi_oled_display_GB2312_string(0, 0, "²»ÒªÏ¹¸ã");
+    // SPIå±å¹•æ˜¾ç¤ºä¸­æ–‡
+    bsp_spi_oled_display_GB2312_string(0, 0, "ä¸è¦çæ");
 
-    // FLASH ²âÊÔ
+    // FLASH æµ‹è¯•
     flash_test();
 
-    // ÊıÂë¹Ü²âÊÔ
-    // ÏÈË¢ĞÂÒ»´Î»º³åÇø£¬ÈÃÊıÂë¹ÜÉÏµç¾ÍÏÔÊ¾ 0000 0000
+    // æ•°ç ç®¡æµ‹è¯•
+    // å…ˆåˆ·æ–°ä¸€æ¬¡ç¼“å†²åŒºï¼Œè®©æ•°ç ç®¡ä¸Šç”µå°±æ˜¾ç¤º 0000 0000
     clear_buffer();
     bsp_digital_leds_all_zero();
 
     while (1)
     {
-        // PCF8563 ÖĞ¶ÏÊÂ¼ş´¦Àí£ºÔ­ÔÚ EXTI5 ÖĞ¶ÏÖĞÖ´ĞĞ£¬ÒÆµ½Ö÷Ñ­»·ÒÔ±ÜÃâÈí¼ş IIC ÖØÈë
+        // PCF8563 ä¸­æ–­äº‹ä»¶å¤„ç†ï¼šåŸåœ¨ EXTI5 ä¸­æ–­ä¸­æ‰§è¡Œï¼Œç§»åˆ°ä¸»å¾ªç¯ä»¥é¿å…è½¯ä»¶ IIC é‡å…¥
         if (g_rtc_int_flag)
         {
             g_rtc_int_flag = 0;
-            on_rtc_int();
+            on_rtc_interrupt();
         }
 
-        // 188ÊıÂë¹ÜÏÔÊ¾NTCÎÂ¶È
-        bsp_188_leds_set_num(bsp_ntc_get_tem());
-        // ADKEY É¨Ãè·ÅÈëÁËsystickÖĞ¶ÏÖĞ£¬Ã¿1msÉ¨ÃèÒ»´Î
+        // è§¦æ‘¸æŒ‰é”®ä¸­æ–­äº‹ä»¶å¤„ç†
+        if (g_touch_key_int_flag)
+        {
+            g_touch_key_int_flag = 0;
+            on_touch_key_interrupt();
+        }
 
-        // IIC OLED ²âÊÔ
+        // 188æ•°ç ç®¡æ˜¾ç¤ºNTCæ¸©åº¦
+        bsp_188_leds_set_num(bsp_ntc_get_tem());
+        // ADKEY æ‰«ææ”¾å…¥äº†systickä¸­æ–­ä¸­ï¼Œæ¯1msæ‰«æä¸€æ¬¡
+
+        // IIC OLED æµ‹è¯•
         // oled_test();
 
-        // ¶ÁÈ¡Ê±¼ä
+        // è¯»å–æ—¶é—´
         bsp_pcf8563_read_time(&time);
-        // IICÆÁÄ»Í¼Æ¬ÉÏµş¼ÓÊ±¼ä
+        // IICå±å¹•å›¾ç‰‡ä¸Šå åŠ æ—¶é—´
         oled_show_rtc(&time);
 
-        // ÊıÂë¹Ü²âÊÔ Ã¿Ãë¼Ó1
+        // æ•°ç ç®¡æµ‹è¯• æ¯ç§’åŠ 1
         bsp_digital_leds_test_tick();
 
-        // ´®¿Ú´òÓ¡Ê±¼ä
+        // ä¸²å£æ‰“å°æ—¶é—´
         // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
         //        time.year % 100, time.month, time.day,
         //        time.hour, time.minutes, time.second, time.week);
 
-        // ´®¿Ú´òÓ¡NTCÎÂ¶È
+        // ä¸²å£æ‰“å°NTCæ¸©åº¦
         // printf("NTC Temperature: %d C\r\n", bsp_ntc_get_tem());
 
-        // Î¹¹·
+        // å–‚ç‹—
         // wwdgt_counter_update(0x7F);
 
         // bsp_buzzer_play_little_star();
 
-        // ¾ØÕó¼üÅÌÉ¨Ãè Óë188ÊıÂë¹ÜÒı½Å³åÍ»£¬²»ÄÜÍ¬Ê±Ê¹ÓÃ
+        // çŸ©é˜µé”®ç›˜æ‰«æ ä¸188æ•°ç ç®¡å¼•è„šå†²çªï¼Œä¸èƒ½åŒæ—¶ä½¿ç”¨
         // int key = KeypadScan();
         // if (key != 255)
         //     printf("key: %d\n", key);

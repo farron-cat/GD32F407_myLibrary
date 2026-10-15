@@ -26,6 +26,9 @@ __weak void on_touch_key_release(uint8_t key)
 }
 
 static uint16_t pre_key_state = 0x0000;
+
+// 触摸按键中断事件处理
+// 不再在 EXTI8 中断里执行，改由主循环检测到 g_touch_key_int_flag 后调用（避免软件 IIC 重入）
 void on_touch_key_interrupt(void)
 {
     // 读取按键值

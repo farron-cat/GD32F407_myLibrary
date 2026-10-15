@@ -99,6 +99,9 @@
 // RTC(PCF8563) 中断标志：EXTI5 中断只置位，主循环清零并处理（避免软件 IIC 重入）
 extern volatile uint8_t g_rtc_int_flag;
 
+// 触摸按键(SC12B) 中断标志：EXTI8 中断只置位，主循环清零并处理（避免软件 IIC 重入）
+extern volatile uint8_t g_touch_key_int_flag;
+
 void msp_exti_init();
 
 #endif // MSP_EXTI_H
