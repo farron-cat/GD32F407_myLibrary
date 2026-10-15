@@ -8,6 +8,7 @@
 #define USE_EXTI0  1 // 核心板按键 KEYC
 #define USE_EXTI3  1 // 独立按键 KEY4
 #define USE_EXTI5  1 // PCF8563
+#define USE_EXTI8  1 // PB8 触摸按键
 #define USE_EXTI11 1 // 旋转编码器引脚A
 #define USE_EXTI15 1 // 旋转编码器引脚B
 
@@ -50,6 +51,20 @@
 #define EXTI5_NUM       EXTI_5
 #define EXTI5_TRIG_TYPE EXTI_TRIG_FALLING
 #define EXTI5_IRQ       EXTI5_9_IRQn
+
+#endif
+
+#if USE_EXTI8
+
+#define EXTI8_PORT_RCU  RCU_GPIOB
+#define EXTI8_PORT      GPIOB
+#define EXTI8_PIN       GPIO_PIN_8
+#define EXTI8_PUPD      GPIO_PUPD_NONE
+#define EXTI8_EXTI_PORT EXTI_SOURCE_GPIOB
+#define EXTI8_EXTI_PIN  EXTI_SOURCE_PIN8
+#define EXTI8_NUM       EXTI_8
+#define EXTI8_TRIG_TYPE EXTI_TRIG_BOTH
+#define EXTI8_IRQ       EXTI5_9_IRQn
 
 #endif
 

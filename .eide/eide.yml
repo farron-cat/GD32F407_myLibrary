@@ -36,6 +36,7 @@ virtualFolder:
         - path: Driver/bsp_adkey/bsp_adkey.c
         - path: Driver/bsp_ec12d/bsp_ec12d.c
         - path: Driver/bsp_digital_leds/bsp_digital_leds.c
+        - path: Driver/bsp_touch_key/bsp_touch_key.c
       folders: []
     - name: Firmware
       files:
@@ -111,6 +112,7 @@ targets:
         - Driver/bsp_adkey
         - Driver/bsp_ec12d
         - Driver/bsp_digital_leds
+        - Driver/bsp_touch_key
       libList: []
     excludeList: []
     settings:

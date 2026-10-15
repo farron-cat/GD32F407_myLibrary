@@ -1,5 +1,6 @@
 #include "msp_exti.h"
 #include "bsp_ec12d.h"
+#include "bsp_touch_key.h"
 
 static void EXTI_config(rcu_periph_enum rcu, uint32_t port, uint32_t pin, uint32_t pupd,
                         uint8_t exti_port, uint8_t exti_pin, exti_line_enum linex,
@@ -25,9 +26,8 @@ static void EXTI_config(rcu_periph_enum rcu, uint32_t port, uint32_t pin, uint32
 
 void msp_exti_init()
 {
-// 初始化PA0
 #if USE_EXTI0
-
+    // 初始化PA0
     EXTI_config(EXTI0_PORT_RCU, EXTI0_PORT, EXTI0_PIN, EXTI0_PUPD, EXTI0_EXTI_PORT,
                 EXTI0_EXTI_PIN, EXTI0_NUM, EXTI0_TRIG_TYPE, EXTI0_IRQ);
 #endif
@@ -36,6 +36,12 @@ void msp_exti_init()
     // 初始化PC3
     EXTI_config(EXTI3_PORT_RCU, EXTI3_PORT, EXTI3_PIN, EXTI3_PUPD, EXTI3_EXTI_PORT,
                 EXTI3_EXTI_PIN, EXTI3_NUM, EXTI3_TRIG_TYPE, EXTI3_IRQ);
+#endif
+
+#if USE_EXTI8
+    // 初始化PB8 触摸按键中断
+    EXTI_config(EXTI8_PORT_RCU, EXTI8_PORT, EXTI8_PIN, EXTI8_PUPD, EXTI8_EXTI_PORT,
+                EXTI8_EXTI_PIN, EXTI8_NUM, EXTI8_TRIG_TYPE, EXTI8_IRQ);
 #endif
 
 #if USE_EXTI5
@@ -136,14 +142,15 @@ void EXTI3_IRQHandler()
 
 #endif
 
-// EXTI3中断处理函数
-#if USE_EXTI5
+// EXTI5 EXIT8 中断处理函数
+#if USE_EXTI5 || USE_EXTI8
 
 // RTC(PCF8563) 中断标志：中断只置位，IIC 处理交给主循环，避免打断主循环正在进行的软件 IIC 时序
 volatile uint8_t g_rtc_int_flag = 0;
 
 void EXTI5_9_IRQHandler()
 {
+#if USE_EXTI5
     if (exti_interrupt_flag_get(EXTI_5) == SET)
     {
         exti_interrupt_flag_clear(EXTI_5);
@@ -151,11 +158,21 @@ void EXTI5_9_IRQHandler()
         // 只置标志，不在中断里做 IIC / printf
         g_rtc_int_flag = 1;
     }
+#endif
+
+#if USE_EXTI8
+    if (exti_interrupt_flag_get(EXTI_8) == SET)
+    {
+        exti_interrupt_flag_clear(EXTI_8);
+
+        on_touch_key_interrupt();
+    }
+#endif
 }
 
 #endif
 
-// EXTI15 USE_EXTI11 中断处理函数
+// EXTI15 EXTI11 中断处理函数
 #if USE_EXTI15 || USE_EXTI11
 
 void EXTI10_15_IRQHandler()

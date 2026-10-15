@@ -17,6 +17,7 @@
 #include "bsp_ntc.h"
 #include "bsp_pcf8563.h"
 #include "bsp_spi_oled.h"
+#include "bsp_touch_key.h"
 
 #include "msp_adc.h"
 #include "msp_exti.h"
@@ -194,6 +195,8 @@ int main(void)
     bsp_ec12d_init();
     // 数码管初始化
     bsp_digital_leds_init();
+    // 触摸按键
+    bsp_touch_key_init();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
