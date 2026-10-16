@@ -8,6 +8,7 @@
 #include "bsp_battery_flows.h"
 #include "bsp_buzzer.h"
 #include "bsp_digital_leds.h"
+#include "bsp_dot_matrix.h"
 #include "bsp_ec12d.h"
 #include "bsp_flash.h"
 #include "bsp_iic_oled.h"
@@ -37,11 +38,6 @@ void on_usart_recv(USART_HandleTypeDef *huart)
     if (huart->usartx == USART0)
     {
         printf("usart0_recv:%s\n", huart->recv_buff);
-        // // 配置剩余参数
-        // dma_periph_address_config(DMA1, DMA_CH0, (uint32_t)huart->recv_buff);
-        // dma_transfer_number_config(DMA1, DMA_CH0, huart->recv_length);
-        // // 启动DMA传输
-        // dma_channel_enable(DMA1, DMA_CH0);
     }
 }
 
@@ -197,6 +193,9 @@ int main(void)
     bsp_digital_leds_init();
     // 触摸按键
     bsp_touch_key_init();
+    // 点阵屏
+    bsp_dot_matrix_init();
+    bsp_dot_matrix_clear();
 
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
@@ -244,6 +243,9 @@ int main(void)
     clear_buffer();
     bsp_digital_leds_all_zero();
 
+    //
+    // bsp_dot_matrix_display_num(2);
+
     while (1)
     {
         // PCF8563 中断事件处理：原在 EXTI5 中断中执行，移到主循环以避免软件 IIC 重入
@@ -274,6 +276,9 @@ int main(void)
 
         // 数码管测试 每秒加1
         bsp_digital_leds_test_tick();
+
+        // 点阵屏测试
+        bsp_dot_matrix_test_tick();
 
         // 串口打印时间
         // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
