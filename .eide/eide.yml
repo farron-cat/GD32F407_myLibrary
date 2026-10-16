@@ -15,10 +15,14 @@ virtualFolder:
         - path: User/systick.c
       folders: []
     - name: App
-      files: []
+      files:
+        - path: App/app_input/app_input.c
+        - path: App/app_show/app_show.c
+        - path: App/app_test/app_test.c
       folders: []
     - name: Middleware
-      files: []
+      files:
+        - path: Middleware/taskmanager.c
       folders: []
     - name: Driver
       files:
@@ -38,6 +42,7 @@ virtualFolder:
         - path: Driver/bsp_digital_leds/bsp_digital_leds.c
         - path: Driver/bsp_touch_key/bsp_touch_key.c
         - path: Driver/bsp_dot_matrix/bsp_dot_matrix.c
+        - path: Driver/bsp_iic_oled/bmp.c
       folders: []
     - name: Firmware
       files:
@@ -115,6 +120,8 @@ targets:
         - Driver/bsp_digital_leds
         - Driver/bsp_touch_key
         - Driver/bsp_dot_matrix
+        - App
+        - Middleware
       libList: []
     excludeList: []
     settings:

@@ -3,6 +3,15 @@
 #include "systick.h"
 #include <stdio.h>
 
+#include "msp_adc.h"
+#include "msp_exti.h"
+#include "msp_fwdgt.h"
+#include "msp_iic.h"
+#include "msp_rtc.h"
+#include "msp_spi.h"
+#include "msp_uart.h"
+#include "msp_wwdgt.h"
+
 #include "bsp_188_leds.h"
 #include "bsp_adkey.h"
 #include "bsp_battery_flows.h"
@@ -20,14 +29,7 @@
 #include "bsp_spi_oled.h"
 #include "bsp_touch_key.h"
 
-#include "msp_adc.h"
-#include "msp_exti.h"
-#include "msp_fwdgt.h"
-#include "msp_iic.h"
-#include "msp_rtc.h"
-#include "msp_spi.h"
-#include "msp_uart.h"
-#include "msp_wwdgt.h"
+#include "taskmanager.h"
 
 #include "bmp.h"
 
@@ -39,106 +41,6 @@ void on_usart_recv(USART_HandleTypeDef *huart)
     {
         printf("usart0_recv:%s\n", huart->recv_buff);
     }
-}
-
-// IIC OLED 测试
-void oled_test(void)
-{
-    uint8_t t = ' ';
-
-    bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
-    bsp_iic_oled_refresh();
-    delay_1ms(500);
-    bsp_iic_oled_clear();
-    bsp_iic_oled_show_chinese(0, 0, 0, 16, 1);   // 中
-    bsp_iic_oled_show_chinese(18, 0, 1, 16, 1);  // 景
-    bsp_iic_oled_show_chinese(36, 0, 2, 16, 1);  // 园
-    bsp_iic_oled_show_chinese(54, 0, 3, 16, 1);  // 电
-    bsp_iic_oled_show_chinese(72, 0, 4, 16, 1);  // 子
-    bsp_iic_oled_show_chinese(90, 0, 5, 16, 1);  // 技
-    bsp_iic_oled_show_chinese(108, 0, 6, 16, 1); // 术
-    bsp_iic_oled_show_string(8, 16, "ZHONGJINGYUAN", 16, 1);
-    bsp_iic_oled_show_string(20, 32, "2014/05/01", 16, 1);
-    bsp_iic_oled_show_string(0, 48, "ASCII:", 16, 1);
-    bsp_iic_oled_show_string(63, 48, "CODE:", 16, 1);
-    bsp_iic_oled_show_char(48, 48, t, 16, 1); // 显示ASCII字符
-    t++;
-    if (t > '~')
-        t = ' ';
-    bsp_iic_oled_show_number(103, 48, t, 3, 16, 1);
-    bsp_iic_oled_refresh();
-
-    delay_1ms(500);
-    bsp_iic_oled_clear();
-    bsp_iic_oled_show_chinese(0, 0, 0, 16, 1);   // 16*16 中
-    bsp_iic_oled_show_chinese(16, 0, 0, 24, 1);  // 24*24 中
-    bsp_iic_oled_show_chinese(24, 20, 0, 32, 1); // 32*32 中
-    bsp_iic_oled_show_chinese(64, 0, 0, 64, 1);  // 64*64 中
-    bsp_iic_oled_refresh();
-
-    delay_1ms(500);
-    bsp_iic_oled_clear();
-    bsp_iic_oled_show_string(0, 0, "ABC", 8, 1);   // 6*8 “ABC”
-    bsp_iic_oled_show_string(0, 8, "ABC", 12, 1);  // 6*12 “ABC”
-    bsp_iic_oled_show_string(0, 20, "ABC", 16, 1); // 8*16 “ABC”
-    bsp_iic_oled_show_string(0, 36, "ABC", 24, 1); // 12*24 “ABC”
-    bsp_iic_oled_refresh();
-
-    delay_1ms(500);
-    bsp_iic_oled_scroll_display(11, 4, 1);
-}
-
-// OLED 显示 RTC 时间
-void oled_show_rtc(Time_pcf *t)
-{
-    char buf[32] = {0};
-
-    // 1. 先显示 BMP1 整幅背景（128x64）
-    //    这一步会覆盖上次 GRAM，保证背景干净
-    bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
-
-    // 2. 在 BMP1 原本 "2014/05/01" 的位置覆盖显示日期
-    //    原测试代码用的是 (20, 32)，这里保持一致
-    sprintf(buf, "20%02d/%02d/%02d", t->year % 100, t->month, t->day);
-    bsp_iic_oled_show_string(36, 38, buf, 8, 1);
-
-    // 3. 在日期右侧显示星期
-    // sprintf(buf, "W%d", t->week);
-    // OLED_ShowString(100, 32, buf, 8, 1);
-
-    // 4. 在 BMP1 原本 "ASCII: CODE:" 的位置覆盖显示时间
-    //    原测试代码用的是 (0, 48) 和 (63, 48)，这里把时分秒放到中间
-    sprintf(buf, "%02d:%02d:%02d", t->hour, t->minutes, t->second);
-    bsp_iic_oled_show_string(36, 2, buf, 8, 1);
-
-    // 5. 统一刷新到 OLED
-    bsp_iic_oled_refresh();
-}
-
-// FLASH 测试
-void flash_test(void)
-{
-    unsigned char buff[20] = {0};
-    // 获取GD25Q32的设备ID
-    printf("ID = %X\r\n", bsp_flash_read_id());
-
-    // 读取0地址长度为7个字节的数据到buff
-    bsp_flash_read(buff, 0, 10);
-    // 输出读取到的数据
-    printf("buff: %s\r\n", buff);
-    delay_1ms(200);
-    // 往0地址写入6个字节的数据 “hello”
-    bsp_flash_write((uint8_t *)"hello", 0, 10);
-
-    // 等待写入完成
-    delay_1ms(200);
-
-    // 读取0地址长度为7个字节的数据到buff
-    bsp_flash_read(buff, 0, 10);
-    // 输出读取到的数据
-    printf("buff: %s\r\n", buff);
-
-    delay_1ms(1000);
 }
 
 //============ 主 函 数 ============
@@ -197,88 +99,103 @@ int main(void)
     bsp_dot_matrix_init();
     bsp_dot_matrix_clear();
 
+    //============  APP  ============
+    app_input_init();
+    app_show_init();
+
     printf("============ start ============\n");
     printf("SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
+
+    //============ 测 试 ============
+    app_test_flash();
+    app_test_spi_oled();
+    app_test_iic_oled();
+    app_test_digital_leds();
+    app_test_pcf8563_set_time_alarm();
 
     // 独立看门狗
     // msp_fwdgt_config();
     // 窗口看门狗
     // msp_wwdgt_config(); // 前面的初始化会消耗时间
 
-    Time_pcf time;
-    Alarm alarm;
+    // Time_pcf time;
+    // Alarm alarm;
 
-    // 设置时间
-    time.year = 2026;
-    time.month = 9;
-    time.day = 28;
-    time.week = 1;
-    time.hour = 14;
-    time.minutes = 59;
-    time.second = 55;
-    bsp_pcf8563_set_time(&time);
+    // // 设置时间
+    // time.year = 2026;
+    // time.month = 9;
+    // time.day = 28;
+    // time.week = 1;
+    // time.hour = 14;
+    // time.minutes = 59;
+    // time.second = 55;
+    // bsp_pcf8563_set_time(&time);
 
-    // 设置闹钟 15:00 周日
-    alarm.hour = 15;
-    alarm.min = 0;
-    alarm.day = 28;
-    alarm.week = 1;
-    bsp_pcf8563_set_alarm(&alarm);
-    bsp_pcf8563_alarm_enable();
+    // // 设置闹钟 15:00 周日
+    // alarm.hour = 15;
+    // alarm.min = 0;
+    // alarm.day = 28;
+    // alarm.week = 1;
+    // bsp_pcf8563_set_alarm(&alarm);
+    // bsp_pcf8563_alarm_enable();
 
-    // IIC屏幕显示图片
-    bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
-    bsp_iic_oled_refresh();
+    // // IIC屏幕显示图片
+    // bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
+    // bsp_iic_oled_refresh();
 
-    // SPI屏幕显示图片
-    // bsp_spi_oled_display_128x64(BMP1);
-    // SPI屏幕显示中文
-    bsp_spi_oled_display_GB2312_string(0, 0, "不要瞎搞");
+    // // SPI屏幕显示图片
+    // // bsp_spi_oled_display_128x64(BMP1);
+    // // SPI屏幕显示中文
+    // bsp_spi_oled_display_GB2312_string(0, 0, "不要瞎搞");
 
-    // FLASH 测试
-    flash_test();
+    // // FLASH 测试
+    // flash_test();
 
-    // 数码管测试
-    // 先刷新一次缓冲区，让数码管上电就显示 0000 0000
-    clear_buffer();
-    bsp_digital_leds_all_zero();
+    // // 数码管测试
+    // // 先刷新一次缓冲区，让数码管上电就显示 0000 0000
+    // clear_buffer();
+    // bsp_digital_leds_all_zero();
 
     //
-    // bsp_dot_matrix_display_num(2);
+    // bsp_dot_matrix_display_num(1);
 
     while (1)
     {
-        // PCF8563 中断事件处理：原在 EXTI5 中断中执行，移到主循环以避免软件 IIC 重入
-        if (g_rtc_int_flag)
-        {
-            g_rtc_int_flag = 0;
-            on_rtc_interrupt();
-        }
+        // 任务调度
+        task_schedule();
 
-        // 触摸按键中断事件处理
-        if (g_touch_key_int_flag)
-        {
-            g_touch_key_int_flag = 0;
-            on_touch_key_interrupt();
-        }
+        // // PCF8563 中断事件处理：原在 EXTI5 中断中执行，移到主循环以避免软件 IIC 重入
+        // if (g_rtc_int_flag)
+        // {
+        //     g_rtc_int_flag = 0;
+        //     on_rtc_interrupt();
+        // }
 
-        // 188数码管显示NTC温度
-        bsp_188_leds_set_num(bsp_ntc_get_tem());
+        // // 触摸按键中断事件处理
+        // if (g_touch_key_int_flag)
+        // {
+        //     g_touch_key_int_flag = 0;
+        //     on_touch_key_interrupt();
+        // }
+
+        // // 188数码管显示NTC温度
+        // bsp_188_leds_set_num(bsp_ntc_get_tem());
+
         // ADKEY 扫描放入了systick中断中，每1ms扫描一次
 
         // IIC OLED 测试
         // oled_test();
 
-        // 读取时间
-        bsp_pcf8563_read_time(&time);
-        // IIC屏幕图片上叠加时间
-        oled_show_rtc(&time);
+        // // 读取时间
+        // bsp_pcf8563_read_time(&time);
+        // // IIC屏幕图片上叠加时间
+        // oled_show_rtc(&time);
 
-        // 数码管测试 每秒加1
-        bsp_digital_leds_test_tick();
+        // // 数码管测试 每秒加1
+        // bsp_digital_leds_test_tick();
 
-        // 点阵屏测试
-        bsp_dot_matrix_test_tick();
+        // // 点阵屏测试
+        // bsp_dot_matrix_test_tick();
 
         // 串口打印时间
         // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",

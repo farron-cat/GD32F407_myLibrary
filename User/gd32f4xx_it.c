@@ -38,6 +38,7 @@ OF SUCH DAMAGE.
 #include "bsp_digital_leds.h"
 #include "main.h"
 #include "systick.h"
+#include "taskmanager.h"
 
 /*!
     \brief    this function handles SysTick exception
@@ -55,11 +56,15 @@ void SysTick_Handler(void)
     if (++div >= 1000)
     {
         div = 0;
+
         // 每1ms扫描一次188数码管
         bsp_188_leds_scan();
         // 每1ms扫描一次按键
         bsp_adkey_scan();
         // 每1ms扫描一次数码管
         bsp_digital_leds_scan();
+
+        // 每1ms执行一次任务管理器
+        task_switch();
     }
 }
