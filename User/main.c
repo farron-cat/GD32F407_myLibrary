@@ -2,7 +2,11 @@
 #include "gd32f4xx.h"
 #include "systick.h"
 #include <stdio.h>
-
+//============ 任务调度 ============
+#include "FreeRTOS.h"
+#include "task.h"
+#include "taskmanager.h"
+//============ 片上外设 ============
 #include "msp_adc.h"
 #include "msp_exti.h"
 #include "msp_fwdgt.h"
@@ -11,7 +15,7 @@
 #include "msp_spi.h"
 #include "msp_uart.h"
 #include "msp_wwdgt.h"
-
+//============ 片外外设 ============
 #include "bsp_188_leds.h"
 #include "bsp_adkey.h"
 #include "bsp_battery_flows.h"
@@ -28,31 +32,58 @@
 #include "bsp_pcf8563.h"
 #include "bsp_spi_oled.h"
 #include "bsp_touch_key.h"
-
-#include "FreeRTOS.h"
-#include "task.h"
-#include "taskmanager.h"
-
+//============  资 源  ============
 #include "bmp.h"
 
-/* 应用任务：就是原来 main() 里的 while(1) 主循环 */
-#define APP_TASK_NAME       "app"
+// 应用任务：就是原来 main() 里的 while(1) 主循环
+#define APP_TASK_NAME "app"
 #define APP_TASK_STACK_SIZE 512U
-#define APP_TASK_PRIORITY   (tskIDLE_PRIORITY + 3)
+#define APP_TASK_PRIORITY (tskIDLE_PRIORITY + 3)
 
+// 任务句柄
 static TaskHandle_t app_task_handle = NULL;
+TaskHandle_t task_led1_handler;
+TaskHandle_t task_led2_handler;
 
+// 之前taskmanager的任务调度 TODO:一步步将任务移动到FreeRTOS的task中
 static void app_task(void *pvParameters)
 {
-    (void)pvParameters;
+    (void)pvParameters; // 消除编译器的"未使用参数"警告
 
     while (1)
     {
-        /* 执行 task_switch() 置位的任务（与原裸机主循环一致） */
+        // 执行 task_switch() 置位的任务（与原裸机主循环一致）
         task_schedule();
 
-        /* 让出 CPU 给空闲/定时器任务，1ms 扫描仍由节拍钩子完成 */
+        // 让出 CPU 给空闲/定时器任务，1ms 扫描仍由节拍钩子完成
         vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
+
+// 点灯测试
+void task_led1(void *pvParameters)
+{
+    (void)pvParameters; // 消除编译器的"未使用参数"警告
+
+    while (1)
+    {
+        vTaskDelay(1000);
+        bsp_leds_open(LED1);
+        vTaskDelay(1000);
+        bsp_leds_close(LED1);
+    }
+}
+
+void task_led2(void *pvParameters)
+{
+    (void)pvParameters; // 消除编译器的"未使用参数"警告
+
+    while (1)
+    {
+        vTaskDelay(100);
+        bsp_leds_open(LED2);
+        vTaskDelay(100);
+        bsp_leds_close(LED2);
     }
 }
 
@@ -81,18 +112,6 @@ int main(void)
     // USART0和USART2初始化
     msp_uart_init();
     printf("\r\n[boot] SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
-
-    /* 临时自检：确认 DWT 周期计数器是否真的在计数（定位完成后可删除） */
-    {
-        volatile uint32_t i;
-        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-        DWT->CYCCNT = 0U;
-        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-        for (i = 0U; i < 100000U; i++)
-        {
-        }
-        printf("[boot] DWT_CYCCNT = %u\r\n", (unsigned int)DWT->CYCCNT);
-    }
     // EXTI0 PA0 和 EXTI3 PC3初始化
     msp_exti_init();
     // RTC
@@ -167,6 +186,20 @@ int main(void)
                 NULL,
                 APP_TASK_PRIORITY,
                 &app_task_handle);
+
+    xTaskCreate((TaskFunction_t)task_led1, // 指向实现任务功能的函数指针
+                (const char *)"task_led1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
+                64,                        // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
+                NULL,                      // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
+                2,                         // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
+                &task_led1_handler);       // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
+
+    xTaskCreate((TaskFunction_t)task_led2,
+                (const char *)"task_led2",
+                64,
+                NULL,
+                2,
+                &task_led2_handler);
 
     vTaskStartScheduler();
 
