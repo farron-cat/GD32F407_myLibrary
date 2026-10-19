@@ -29,9 +29,32 @@
 #include "bsp_spi_oled.h"
 #include "bsp_touch_key.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
 #include "taskmanager.h"
 
 #include "bmp.h"
+
+/* 应用任务：就是原来 main() 里的 while(1) 主循环 */
+#define APP_TASK_NAME       "app"
+#define APP_TASK_STACK_SIZE 512U
+#define APP_TASK_PRIORITY   (tskIDLE_PRIORITY + 3)
+
+static TaskHandle_t app_task_handle = NULL;
+
+static void app_task(void *pvParameters)
+{
+    (void)pvParameters;
+
+    while (1)
+    {
+        /* 执行 task_switch() 置位的任务（与原裸机主循环一致） */
+        task_schedule();
+
+        /* 让出 CPU 给空闲/定时器任务，1ms 扫描仍由节拍钩子完成 */
+        vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
 
 // 串口接收回调
 void on_usart_recv(USART_HandleTypeDef *huart)
@@ -50,9 +73,10 @@ int main(void)
     nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
     // 时钟倍频(全局配置 所有定时器都是168Mhz)
     rcu_timer_clock_prescaler_config(RCU_TIMER_PSC_MUL4);
+#ifndef SYS_SUPPORT_OS
     // 系统滴答时钟初始化
     systick_config();
-
+#endif
     //============ 片上外设 ============
     // USART0和USART2初始化
     msp_uart_init();
@@ -118,14 +142,18 @@ int main(void)
     // 窗口看门狗
     // msp_wwdgt_config(); // 前面的初始化会消耗时间
 
+    // 创建应用任务（原 main 主循环）并启动 FreeRTOS 调度器
+    xTaskCreate((TaskFunction_t)app_task,
+                (const char *)APP_TASK_NAME,
+                APP_TASK_STACK_SIZE,
+                NULL,
+                APP_TASK_PRIORITY,
+                &app_task_handle);
+
+    vTaskStartScheduler();
+
+    // 只有堆内存不足、调度器启动失败时才会执行到这里
     while (1)
     {
-        // 任务调度
-        task_schedule();
-
-        // 喂狗
-        // wwdgt_counter_update(0x7F);
-
-        // bsp_buzzer_play_little_star();
     }
 }

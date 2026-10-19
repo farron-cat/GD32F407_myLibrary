@@ -48,4 +48,7 @@ void delay_decrement(void);
 /* get_us_cnt*/
 uint64_t get_us_cnt(void);
 
+/* update microsecond counter by OS tick (FreeRTOS) */
+void delay_tick_update(void);
+
 #endif /* SYS_TICK_H */

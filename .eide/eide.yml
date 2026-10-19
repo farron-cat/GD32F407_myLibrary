@@ -78,6 +78,21 @@ virtualFolder:
         - path: Hardware/msp_fwdgt/msp_fwdgt.c
         - path: Hardware/msp_wwdgt/msp_wwdgt.c
       folders: []
+    - name: FreeRTOS_core
+      files:
+        - path: Middleware/FreeRTOS/croutine.c
+        - path: Middleware/FreeRTOS/event_groups.c
+        - path: Middleware/FreeRTOS/list.c
+        - path: Middleware/FreeRTOS/queue.c
+        - path: Middleware/FreeRTOS/stream_buffer.c
+        - path: Middleware/FreeRTOS/tasks.c
+        - path: Middleware/FreeRTOS/timers.c
+      folders: []
+    - name: FreeRTOS_port
+      files:
+        - path: Middleware/FreeRTOS/portable/MemMang/heap_4.c
+        - path: Middleware/FreeRTOS/portable/GCC/ARM_CM4F/port.c
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -88,6 +103,7 @@ targets:
       defineList:
         - USE_STDPERIPH_DRIVER
         - GD32F407
+        - SYS_SUPPORT_OS
       incList:
         - User
         - Firmware/CMSIS/GD/GD32F4xx/Include
@@ -122,6 +138,9 @@ targets:
         - Driver/bsp_dot_matrix
         - App
         - Middleware
+        - Middleware/FreeRTOS
+        - Middleware/FreeRTOS/include
+        - Middleware/FreeRTOS/portable/GCC/ARM_CM4F
       libList: []
     excludeList: []
     settings:
