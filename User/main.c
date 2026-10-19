@@ -118,101 +118,14 @@ int main(void)
     // 窗口看门狗
     // msp_wwdgt_config(); // 前面的初始化会消耗时间
 
-    // Time_pcf time;
-    // Alarm alarm;
-
-    // // 设置时间
-    // time.year = 2026;
-    // time.month = 9;
-    // time.day = 28;
-    // time.week = 1;
-    // time.hour = 14;
-    // time.minutes = 59;
-    // time.second = 55;
-    // bsp_pcf8563_set_time(&time);
-
-    // // 设置闹钟 15:00 周日
-    // alarm.hour = 15;
-    // alarm.min = 0;
-    // alarm.day = 28;
-    // alarm.week = 1;
-    // bsp_pcf8563_set_alarm(&alarm);
-    // bsp_pcf8563_alarm_enable();
-
-    // // IIC屏幕显示图片
-    // bsp_iic_oled_show_picture(0, 0, 128, 64, BMP1, 1);
-    // bsp_iic_oled_refresh();
-
-    // // SPI屏幕显示图片
-    // // bsp_spi_oled_display_128x64(BMP1);
-    // // SPI屏幕显示中文
-    // bsp_spi_oled_display_GB2312_string(0, 0, "不要瞎搞");
-
-    // // FLASH 测试
-    // flash_test();
-
-    // // 数码管测试
-    // // 先刷新一次缓冲区，让数码管上电就显示 0000 0000
-    // clear_buffer();
-    // bsp_digital_leds_all_zero();
-
-    //
-    // bsp_dot_matrix_display_num(1);
-
     while (1)
     {
         // 任务调度
         task_schedule();
 
-        // // PCF8563 中断事件处理：原在 EXTI5 中断中执行，移到主循环以避免软件 IIC 重入
-        // if (g_rtc_int_flag)
-        // {
-        //     g_rtc_int_flag = 0;
-        //     on_rtc_interrupt();
-        // }
-
-        // // 触摸按键中断事件处理
-        // if (g_touch_key_int_flag)
-        // {
-        //     g_touch_key_int_flag = 0;
-        //     on_touch_key_interrupt();
-        // }
-
-        // // 188数码管显示NTC温度
-        // bsp_188_leds_set_num(bsp_ntc_get_tem());
-
-        // ADKEY 扫描放入了systick中断中，每1ms扫描一次
-
-        // IIC OLED 测试
-        // oled_test();
-
-        // // 读取时间
-        // bsp_pcf8563_read_time(&time);
-        // // IIC屏幕图片上叠加时间
-        // oled_show_rtc(&time);
-
-        // // 数码管测试 每秒加1
-        // bsp_digital_leds_test_tick();
-
-        // // 点阵屏测试
-        // bsp_dot_matrix_test_tick();
-
-        // 串口打印时间
-        // printf("20%02d-%02d-%02d %02d:%02d:%02d Week:%d\r\n",
-        //        time.year % 100, time.month, time.day,
-        //        time.hour, time.minutes, time.second, time.week);
-
-        // 串口打印NTC温度
-        // printf("NTC Temperature: %d C\r\n", bsp_ntc_get_tem());
-
         // 喂狗
         // wwdgt_counter_update(0x7F);
 
         // bsp_buzzer_play_little_star();
-
-        // 矩阵键盘扫描 与188数码管引脚冲突，不能同时使用
-        // int key = KeypadScan();
-        // if (key != 255)
-        //     printf("key: %d\n", key);
     }
 }
