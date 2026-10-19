@@ -80,16 +80,32 @@ int main(void)
     //============ 片上外设 ============
     // USART0和USART2初始化
     msp_uart_init();
+    printf("\r\n[boot] SystemCoreClock = %u\r\n", (unsigned int)SystemCoreClock);
+
+    /* 临时自检：确认 DWT 周期计数器是否真的在计数（定位完成后可删除） */
+    {
+        volatile uint32_t i;
+        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+        DWT->CYCCNT = 0U;
+        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+        for (i = 0U; i < 100000U; i++)
+        {
+        }
+        printf("[boot] DWT_CYCCNT = %u\r\n", (unsigned int)DWT->CYCCNT);
+    }
     // EXTI0 PA0 和 EXTI3 PC3初始化
     msp_exti_init();
     // RTC
     msp_rtc_init(HXTAL);
+    printf("[init] rtc ok\r\n");
     // IIC
     msp_iic_init();
     // ADC
     msp_adc_init();
+    printf("[init] adc ok\r\n");
     // SPI
     msp_spi_init();
+    printf("[init] msp ok\r\n");
 
     //============ 片外外设 ============
     // LED灯组初始化
@@ -101,6 +117,7 @@ int main(void)
     // oled初始化
     bsp_iic_oled_init();
     bsp_spi_oled_init();
+    printf("[init] oled ok\r\n");
     // pcf8563初始化
     bsp_pcf8563_init();
     // flash
@@ -122,6 +139,7 @@ int main(void)
     // 点阵屏
     bsp_dot_matrix_init();
     bsp_dot_matrix_clear();
+    printf("[init] bsp ok\r\n");
 
     //============  APP  ============
     app_input_init();

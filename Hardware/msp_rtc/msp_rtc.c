@@ -69,7 +69,7 @@ static void msp_rtc_config(RTC_CLOCK_SOURCE rcs)
         printf("rtc_register_sync_wait error\n");
         return;
     }
-    printf("rtc_register_sync_wait ok\n");
+    // printf("rtc_register_sync_wait ok\n");
 }
 
 // 初始化RTC时钟

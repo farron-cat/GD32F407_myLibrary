@@ -113,27 +113,47 @@ uint64_t get_us_cnt(void)
 
 #include "FreeRTOS.h"
 #include "task.h"
-
 /*
  * FreeRTOS 环境下：
- *  - SysTick 已经交给 FreeRTOS 做 1ms 系统节拍，不能再当 1us 延时基准
- *  - 延时改用 Cortex-M4 内核的 DWT 周期计数器，调度器启动前后、中断里都能用
- *  - 微秒时间戳由系统节拍钩子每 1ms 累加一次
+ *  - SysTick 已经交给 FreeRTOS 做 1ms 系统节拍
+ *  - 微秒级延时改用 TIMER6 自由运行计数器(1MHz)，
+ *    不依赖 DWT/调试单元，调度器启动前后、中断里都能用
+ *  - 微秒时间戳由系统节拍每 1ms 累加一次
  */
+
+#define US_TIMER TIMER6
+#define US_TIMER_RCU RCU_TIMER6
 
 static volatile uint64_t us_cnt = 0;
 
-/* 使能 DWT 周期计数器（只做一次） */
-static void dwt_delay_init(void)
+/* 把 TIMER6 配置成 1MHz 自由运行计数器，只初始化一次 */
+static void us_timer_init(void)
 {
-    static uint8_t inited = 0;
+    static uint8_t inited = 0U;
 
     if (0U == inited)
     {
+        timer_parameter_struct timer_init_struct;
+        uint32_t us_psc;
         inited = 1U;
-        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-        DWT->CYCCNT = 0U;
-        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
+        rcu_periph_clock_enable(US_TIMER_RCU);
+        timer_deinit(US_TIMER);
+
+        timer_struct_para_init(&timer_init_struct);
+        /* RCU_TIMER_PSC_MUL4 下 APB1 定时器时钟等于 SystemCoreClock(168MHz) */
+        /* 1MHz 计数：分频 = 定时器时钟/1MHz - 1，时钟异常时按 168MHz 兜底 */
+        us_psc = (uint32_t)(SystemCoreClock / 1000000U);
+        if ((0U == us_psc) || (us_psc > 65536U))
+        {
+            us_psc = 168U;
+        }
+        timer_init_struct.prescaler = (uint16_t)(us_psc - 1U);
+        timer_init_struct.period = 0xFFFFFFFFU; /* 32 位自由运行 */
+        timer_init_struct.counterdirection = TIMER_COUNTER_UP;
+        timer_init(US_TIMER, &timer_init_struct);
+
+        timer_enable(US_TIMER);
     }
 }
 
@@ -145,15 +165,13 @@ static void dwt_delay_init(void)
 */
 void delay_1us(uint32_t count)
 {
-    uint32_t start, ticks;
+    uint32_t start;
 
-    dwt_delay_init();
+    us_timer_init();
+    start = TIMER_CNT(US_TIMER);
 
-    ticks = count * (SystemCoreClock / 1000000U);
-    start = DWT->CYCCNT;
-
-    /* 32 位计数器回绕时差值依然正确 */
-    while ((DWT->CYCCNT - start) < ticks)
+    /* 32 位无符号减法自动处理计数器回绕 */
+    while ((TIMER_CNT(US_TIMER) - start) < count)
     {
     }
 }
