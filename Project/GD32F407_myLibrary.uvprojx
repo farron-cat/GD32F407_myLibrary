@@ -110,11 +110,11 @@
         </CommonProperty>
         <DllOption>
           <SimDllName>SARMCM3.DLL</SimDllName>
-          <SimDllArguments> -REMAP -MPU</SimDllArguments>
+          <SimDllArguments>-REMAP -MPU</SimDllArguments>
           <SimDlgDll>DCM.DLL</SimDlgDll>
           <SimDlgDllArguments>-pCM4</SimDlgDllArguments>
           <TargetDllName>SARMCM3.DLL</TargetDllName>
-          <TargetDllArguments> -MPU</TargetDllArguments>
+          <TargetDllArguments>-MPU</TargetDllArguments>
           <TargetDlgDll>TCM.DLL</TargetDlgDll>
           <TargetDlgDllArguments>-pCM4</TargetDlgDllArguments>
         </DllOption>
@@ -338,9 +338,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_STDPERIPH_DRIVER,GD32F407</Define>
+              <Define>USE_STDPERIPH_DRIVER,GD32F407,HXTAL_VALUE=8000000,SYS_SUPPORT_OS</Define>
               <Undefine></Undefine>
-              <IncludePath>..\User;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\Firmware\CMSIS;..\Driver\bsp_leds;..\Driver\bsp_keys</IncludePath>
+              <IncludePath>..\User;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\Firmware\CMSIS;..\Driver\bsp_leds;..\Driver\bsp_keys;..\App;..\Middleware;..\Hardware\msp_exti;..\Driver\bsp_188_leds;..\Driver\bsp_adkey;..\Driver\bsp_battery_flows;..\Driver\bsp_buzzer;..\Driver\bsp_digital_leds;..\Driver\bsp_dot_matrix;..\Driver\bsp_ec12d;..\Driver\bsp_flash;..\Driver\bsp_iic_oled;..\Driver\bsp_keypad;..\Driver\bsp_ntc;..\Driver\bsp_pcf8563;..\Driver\bsp_spi_oled;..\Driver\bsp_touch_key;..\Hardware\msp_adc;..\Hardware\msp_fwdgt;..\Hardware\msp_iic;..\Hardware\msp_rtc;..\Hardware\msp_spi;..\Hardware\msp_uart;..\Hardware\msp_wwdgt;..\Middleware\FreeRTOS\include;..\Middleware\FreeRTOS\portable\GCC\ARM_CM4F;..\Middleware\FreeRTOS</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -403,9 +403,33 @@
         </Group>
         <Group>
           <GroupName>App</GroupName>
+          <Files>
+            <File>
+              <FileName>app_input.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\app_input\app_input.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_show.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\app_show\app_show.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\app_test\app_test.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>Middleware</GroupName>
+          <Files>
+            <File>
+              <FileName>taskmanager.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\taskmanager.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>Driver</GroupName>
@@ -419,6 +443,76 @@
               <FileName>bsp_keys.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Driver\bsp_keys\bsp_keys.c</FilePath>
+            </File>
+            <File>
+              <FileName>bmp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_iic_oled\bmp.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_188_leds.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_188_leds\bsp_188_leds.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_adkey.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_adkey\bsp_adkey.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_touch_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_touch_key\bsp_touch_key.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_keypad.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_keypad\bsp_keypad.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_ntc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_ntc\bsp_ntc.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_pcf8563.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_pcf8563\bsp_pcf8563.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_iic_oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_iic_oled\bsp_iic_oled.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_digital_leds.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_digital_leds\bsp_digital_leds.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_dot_matrix.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_dot_matrix\bsp_dot_matrix.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_flash\bsp_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_spi_oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_spi_oled\bsp_spi_oled.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_buzzer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_buzzer\bsp_buzzer.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_ec12d.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Driver\bsp_ec12d\bsp_ec12d.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -440,6 +534,56 @@
               <FileType>1</FileType>
               <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_rcu.c</FilePath>
             </File>
+            <File>
+              <FileName>gd32f4xx_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_pmu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_pmu.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_syscfg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_syscfg.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_i2c.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -454,6 +598,96 @@
               <FileName>startup_gd32f407_427.s</FileName>
               <FileType>2</FileType>
               <FilePath>..\Firmware\CMSIS\GD\GD32F4xx\Source\ARM\startup_gd32f407_427.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Hardware</GroupName>
+          <Files>
+            <File>
+              <FileName>msp_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\msp_adc\msp_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>msp_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\msp_exti\msp_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>msp_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\msp_iic\msp_iic.c</FilePath>
+            </File>
+            <File>
+              <FileName>msp_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\msp_rtc\msp_rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>msp_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\msp_spi\msp_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>msp_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\msp_uart\msp_uart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>FreeRTOS_core</GroupName>
+          <Files>
+            <File>
+              <FileName>croutine.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\croutine.c</FilePath>
+            </File>
+            <File>
+              <FileName>event_groups.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\event_groups.c</FilePath>
+            </File>
+            <File>
+              <FileName>list.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\list.c</FilePath>
+            </File>
+            <File>
+              <FileName>queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>stream_buffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\stream_buffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>tasks.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\tasks.c</FilePath>
+            </File>
+            <File>
+              <FileName>timers.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\timers.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>FreeRTOS_port</GroupName>
+          <Files>
+            <File>
+              <FileName>heap_4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\portable\MemMang\heap_4.c</FilePath>
+            </File>
+            <File>
+              <FileName>port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Middleware\FreeRTOS\portable\GCC\ARM_CM4F\port.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -15,10 +15,14 @@ virtualFolder:
         - path: User/systick.c
       folders: []
     - name: App
-      files: []
+      files:
+        - path: App/app_input/app_input.c
+        - path: App/app_show/app_show.c
+        - path: App/app_test/app_test.c
       folders: []
     - name: Middleware
-      files: []
+      files:
+        - path: Middleware/taskmanager.c
       folders: []
     - name: Driver
       files:
@@ -38,6 +42,7 @@ virtualFolder:
         - path: Driver/bsp_digital_leds/bsp_digital_leds.c
         - path: Driver/bsp_touch_key/bsp_touch_key.c
         - path: Driver/bsp_dot_matrix/bsp_dot_matrix.c
+        - path: Driver/bsp_iic_oled/bmp.c
       folders: []
     - name: Firmware
       files:
@@ -73,6 +78,21 @@ virtualFolder:
         - path: Hardware/msp_fwdgt/msp_fwdgt.c
         - path: Hardware/msp_wwdgt/msp_wwdgt.c
       folders: []
+    - name: FreeRTOS_core
+      files:
+        - path: Middleware/FreeRTOS/croutine.c
+        - path: Middleware/FreeRTOS/event_groups.c
+        - path: Middleware/FreeRTOS/list.c
+        - path: Middleware/FreeRTOS/queue.c
+        - path: Middleware/FreeRTOS/stream_buffer.c
+        - path: Middleware/FreeRTOS/tasks.c
+        - path: Middleware/FreeRTOS/timers.c
+      folders: []
+    - name: FreeRTOS_port
+      files:
+        - path: Middleware/FreeRTOS/portable/MemMang/heap_4.c
+        - path: Middleware/FreeRTOS/portable/GCC/ARM_CM4F/port.c
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -83,6 +103,7 @@ targets:
       defineList:
         - USE_STDPERIPH_DRIVER
         - GD32F407
+        - SYS_SUPPORT_OS
       incList:
         - User
         - Firmware/CMSIS/GD/GD32F4xx/Include
@@ -115,6 +136,11 @@ targets:
         - Driver/bsp_digital_leds
         - Driver/bsp_touch_key
         - Driver/bsp_dot_matrix
+        - App
+        - Middleware
+        - Middleware/FreeRTOS
+        - Middleware/FreeRTOS/include
+        - Middleware/FreeRTOS/portable/GCC/ARM_CM4F
       libList: []
     excludeList: []
     settings:

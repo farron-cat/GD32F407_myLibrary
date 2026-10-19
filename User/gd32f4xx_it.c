@@ -38,6 +38,120 @@ OF SUCH DAMAGE.
 #include "bsp_digital_leds.h"
 #include "main.h"
 #include "systick.h"
+#include "taskmanager.h"
+
+/*!
+    \brief      this function handles NMI exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void NMI_Handler(void)
+{
+    /* if NMI exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
+
+/*!
+    \brief      this function handles HardFault exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void HardFault_Handler(void)
+{
+    /* if Hard Fault exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
+
+/*!
+    \brief      this function handles MemManage exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void MemManage_Handler(void)
+{
+    /* if Memory Manage exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
+
+/*!
+    \brief      this function handles BusFault exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void BusFault_Handler(void)
+{
+    /* if Bus Fault exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
+
+/*!
+    \brief      this function handles UsageFault exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void UsageFault_Handler(void)
+{
+    /* if Usage Fault exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
+
+/*!
+    \brief      this function handles DebugMon exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void DebugMon_Handler(void)
+{
+    /* if DebugMon exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
+
+#ifndef SYS_SUPPORT_OS
+/*!
+    \brief      this function handles SVC exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void SVC_Handler(void)
+{
+    /* if SVC exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
+
+/*!
+    \brief      this function handles PendSV exception
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void PendSV_Handler(void)
+{
+    /* if PendSV exception occurs, go to infinite loop */
+    while (1)
+    {
+    }
+}
 
 /*!
     \brief    this function handles SysTick exception
@@ -55,11 +169,34 @@ void SysTick_Handler(void)
     if (++div >= 1000)
     {
         div = 0;
+
         // 每1ms扫描一次188数码管
         bsp_188_leds_scan();
         // 每1ms扫描一次按键
         bsp_adkey_scan();
         // 每1ms扫描一次数码管
         bsp_digital_leds_scan();
+
+        // 每1ms执行一次任务管理器
+        task_switch();
     }
 }
+#else
+
+void vApplicationTickHook(void)
+{
+    /* 本函数运行在 SysTick 中断上下文，必须快、不能阻塞 */
+
+    /* 1ms 节拍 -> 累加微秒时间戳，供 get_us_cnt() 使用 */
+    delay_tick_update();
+
+    /* 保持裸机版本 SysTick 里 1ms 一次的扫描节拍 */
+    bsp_188_leds_scan();
+    bsp_adkey_scan();
+    bsp_digital_leds_scan();
+
+    /* 任务计数减一（原 SysTick_Handler 中的逻辑） */
+    task_switch();
+}
+
+#endif
