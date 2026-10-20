@@ -42,8 +42,8 @@
 
 // 任务句柄
 static TaskHandle_t app_task_handle = NULL;
-TaskHandle_t task_led1_handler;
-TaskHandle_t task_led2_handler;
+TaskHandle_t task_led1_handle;
+TaskHandle_t task_led2_handle;
 
 // 之前taskmanager的任务调度 TODO:一步步将任务移动到FreeRTOS的task中
 static void app_task(void *pvParameters)
@@ -58,33 +58,38 @@ static void app_task(void *pvParameters)
         // 让出 CPU 给空闲/定时器任务，1ms 扫描仍由节拍钩子完成
         vTaskDelay(pdMS_TO_TICKS(1));
     }
+    // 释放任务资源 （好习惯）
+    vTaskDelete(app_task_handle);
 }
 
-// 点灯测试
-void task_led1(void *pvParameters)
+// 任务优先级测试
+void task1(void *pvParameters)
 {
     (void)pvParameters; // 消除编译器的"未使用参数"警告
 
     while (1)
     {
+        printf("task1\n");
         vTaskDelay(1000);
-        bsp_leds_open(LED1);
-        vTaskDelay(1000);
-        bsp_leds_close(LED1);
     }
+
+    // 释放任务资源 （好习惯）
+    vTaskDelete(task_led1_handle);
+    // 也可以这么写 vTaskDelete(NULL); // 释放自己
 }
 
-void task_led2(void *pvParameters)
+void task2(void *pvParameters)
 {
     (void)pvParameters; // 消除编译器的"未使用参数"警告
 
     while (1)
     {
+        printf("task2\n");
         vTaskDelay(100);
-        bsp_leds_open(LED2);
-        vTaskDelay(100);
-        bsp_leds_close(LED2);
     }
+
+    // 释放任务资源 （好习惯）
+    vTaskDelete(task_led2_handle);
 }
 
 // 串口接收回调
@@ -100,8 +105,8 @@ void on_usart_recv(USART_HandleTypeDef *huart)
 //============ 主 函 数 ============
 int main(void)
 {
-    // 配置整个工程优先级分组 抢占:0~3  响应:0~3
-    nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
+    // 配置整个工程优先级分组 抢占:0~15  响应:无
+    nvic_priority_group_set(NVIC_PRIGROUP_PRE4_SUB0);
     // 时钟倍频(全局配置 所有定时器都是168Mhz)
     rcu_timer_clock_prescaler_config(RCU_TIMER_PSC_MUL4);
 #ifndef SYS_SUPPORT_OS
@@ -187,19 +192,19 @@ int main(void)
                 APP_TASK_PRIORITY,
                 &app_task_handle);
 
-    xTaskCreate((TaskFunction_t)task_led1, // 指向实现任务功能的函数指针
-                (const char *)"task_led1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
-                64,                        // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
-                NULL,                      // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
-                2,                         // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
-                &task_led1_handler);       // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
+    xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
+                (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
+                64,                    // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
+                NULL,                  // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
+                2,                     // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
+                &task_led1_handle);    // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
 
-    xTaskCreate((TaskFunction_t)task_led2,
-                (const char *)"task_led2",
+    xTaskCreate((TaskFunction_t)task2,
+                (const char *)"task2",
                 64,
                 NULL,
-                2,
-                &task_led2_handler);
+                3,
+                &task_led2_handle);
 
     vTaskStartScheduler();
 
