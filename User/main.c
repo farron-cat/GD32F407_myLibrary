@@ -42,8 +42,8 @@
 
 // 任务句柄
 static TaskHandle_t app_task_handle = NULL;
-TaskHandle_t task_led1_handle;
-TaskHandle_t task_led2_handle;
+TaskHandle_t task1_handle;
+TaskHandle_t task2_handle;
 
 // 之前taskmanager的任务调度 TODO:一步步将任务移动到FreeRTOS的task中
 static void app_task(void *pvParameters)
@@ -70,11 +70,11 @@ void task1(void *pvParameters)
     while (1)
     {
         printf("task1\n");
-        vTaskDelay(1000);
+        vTaskDelay(1000); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
 
     // 释放任务资源 （好习惯）
-    vTaskDelete(task_led1_handle);
+    vTaskDelete(task1_handle);
     // 也可以这么写 vTaskDelete(NULL); // 释放自己
 }
 
@@ -85,11 +85,24 @@ void task2(void *pvParameters)
     while (1)
     {
         printf("task2\n");
-        vTaskDelay(100);
+        vTaskDelay(1000);
     }
 
     // 释放任务资源 （好习惯）
-    vTaskDelete(task_led2_handle);
+    vTaskDelete(task2_handle);
+}
+
+void task_keys_scan(void *pvParameters)
+{
+    (void)pvParameters; // 消除编译器的"未使用参数"警告
+
+    while (1)
+    {
+        bsp_keys_scan();
+        vTaskDelay(100);
+    }
+
+    vTaskDelete(NULL);
 }
 
 // 串口接收回调
@@ -99,6 +112,20 @@ void on_usart_recv(USART_HandleTypeDef *huart)
     if (huart->usartx == USART0)
     {
         printf("usart0_recv:%s\n", huart->recv_buff);
+    }
+}
+
+void on_key_press(KEY_NUM key)
+{
+    if (key == KEY1)
+    {
+        printf("suspend task1\n");
+        vTaskSuspend(task1_handle);
+    }
+    else if (key == KEY2)
+    {
+        printf("resume task1\n");
+        vTaskResume(task1_handle);
     }
 }
 
@@ -197,14 +224,21 @@ int main(void)
                 64,                    // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
                 NULL,                  // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
                 2,                     // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
-                &task_led1_handle);    // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
+                &task1_handle);        // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
 
     xTaskCreate((TaskFunction_t)task2,
                 (const char *)"task2",
                 64,
                 NULL,
                 3,
-                &task_led2_handle);
+                &task2_handle);
+
+    xTaskCreate((TaskFunction_t)task_keys_scan,
+                (const char *)"task_keys_scan",
+                64,
+                NULL,
+                3,
+                &task2_handle);
 
     vTaskStartScheduler();
 
