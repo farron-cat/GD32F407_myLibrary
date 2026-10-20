@@ -72,8 +72,10 @@ void task1(void *pvParameters)
 
     for (uint32_t i = 0; i < 1000000; i++)
     {
+        taskENTER_CRITICAL(); // 进入临界区
         uint32_t j = n + 1;
         n = j;
+        taskEXIT_CRITICAL(); // 离开临界区
     }
     printf("task1:%d\n", n);
 
@@ -88,8 +90,10 @@ void task2(void *pvParameters)
 
     for (uint32_t i = 0; i < 1000000; i++)
     {
+        taskENTER_CRITICAL(); // 进入临界区
         uint32_t j = n + 1;
         n = j;
+        taskEXIT_CRITICAL(); // 离开临界区
     }
     printf("task2:%d\n", n);
 
