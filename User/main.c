@@ -4,6 +4,7 @@
 #include <stdio.h>
 //============ 任务调度 ============
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "task.h"
 #include "taskmanager.h"
 #include "timers.h"
@@ -44,14 +45,12 @@
 // 任务句柄
 static TaskHandle_t app_task_handle = NULL;
 
-TimerHandle_t timer1_handle;
-uint8_t timer1_id = 1;
-TimerHandle_t timer2_handle;
-uint8_t timer2_id = 2;
+SemaphoreHandle_t binary_Semaphore_Handle;
 
 TaskHandle_t task1_handle;
 TaskHandle_t task2_handle;
 TaskHandle_t task3_handle;
+
 TaskHandle_t task_keys_scan_handle;
 
 // 之前taskmanager的任务调度 TODO:一步步将任务移动到FreeRTOS的task中
@@ -71,26 +70,15 @@ static void app_task(void *pvParameters)
     vTaskDelete(app_task_handle);
 }
 
-// 软件timer测试
-void timer_callback(TimerHandle_t xTimer)
-{
-    uint8_t id = *((uint8_t *)pvTimerGetTimerID(xTimer));
-    if (id == 1)
-    {
-        printf("timer1 callback\n");
-    }
-    else if (id == 2)
-    {
-        printf("timer2 callback\n");
-    }
-}
-
+// 信号量测试
 void task1(void *pvParameters)
 {
     (void)pvParameters; // 消除编译器的"未使用参数"警告
 
     while (1)
     {
+        // 拿取信号量，没有信号一直等待
+        xSemaphoreTake(binary_Semaphore_Handle, portMAX_DELAY);
         printf("1");
         vTaskDelay(pdMS_TO_TICKS(300)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
@@ -106,6 +94,8 @@ void task2(void *pvParameters)
 
     while (1)
     {
+        // 拿取信号量，没有信号一直等待
+        xSemaphoreTake(binary_Semaphore_Handle, portMAX_DELAY);
         printf("2");
         vTaskDelay(pdMS_TO_TICKS(500)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
@@ -156,20 +146,18 @@ void on_usart_recv(USART_HandleTypeDef *huart)
 void on_key_press(KEY_NUM key)
 {
     if (key == KEY1)
-    { // 打开timer1
-        xTimerStart(timer1_handle, 0);
+    {
+        // 给予信号量
+        xSemaphoreGive(binary_Semaphore_Handle);
     }
     else if (key == KEY2)
-    { // 停止timer1
-        xTimerStop(timer1_handle, 0);
+    {
     }
     else if (key == KEY3)
     {
-        xTimerStart(timer2_handle, 0);
     }
     else if (key == KEY4)
     {
-        xTimerStop(timer2_handle, 0);
     }
 }
 
@@ -263,17 +251,8 @@ int main(void)
                 APP_TASK_PRIORITY,
                 &app_task_handle);
 
-    timer1_handle = xTimerCreate("timer1",            // 定时器名称
-                                 pdMS_TO_TICKS(1000), // 定时器周期，单位为系统节拍（SysTick）
-                                 pdTRUE,              // pdTRUE 表示周期性定时器，pdFALSE 表示单次定时器
-                                 &timer1_id,          // 定时器唯一id
-                                 (TimerCallbackFunction_t)timer_callback);
-
-    timer2_handle = xTimerCreate("timer2",
-                                 pdMS_TO_TICKS(2000),
-                                 pdTRUE,
-                                 &timer2_id,
-                                 (TimerCallbackFunction_t)timer_callback);
+    // 创建信号量 二值信号量，默认没有信号 ==0
+    binary_Semaphore_Handle = xSemaphoreCreateBinary();
 
     xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
                 (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
