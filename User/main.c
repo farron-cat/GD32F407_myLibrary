@@ -4,8 +4,10 @@
 #include <stdio.h>
 //============ 任务调度 ============
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "task.h"
 #include "taskmanager.h"
+#include "timers.h"
 //============ 片上外设 ============
 #include "msp_adc.h"
 #include "msp_exti.h"
@@ -35,15 +37,24 @@
 //============  资 源  ============
 #include "bmp.h"
 
-// 应用任务：就是原来 main() 里的 while(1) 主循环
+//============  任 务  ============
+
+// 应用任务app_task：就是原来 main() 里的 while(1) 主循环
 #define APP_TASK_NAME "app"
 #define APP_TASK_STACK_SIZE 512U
 #define APP_TASK_PRIORITY (tskIDLE_PRIORITY + 3)
 
 // 任务句柄
 static TaskHandle_t app_task_handle = NULL;
-TaskHandle_t task_led1_handler;
-TaskHandle_t task_led2_handler;
+
+// 信号量句柄
+SemaphoreHandle_t mutex_Semaphore_Handle;
+
+TaskHandle_t task1_handle;
+TaskHandle_t task2_handle;
+TaskHandle_t task3_handle;
+
+TaskHandle_t task_keys_scan_handle;
 
 // 之前taskmanager的任务调度 TODO:一步步将任务移动到FreeRTOS的task中
 static void app_task(void *pvParameters)
@@ -58,34 +69,76 @@ static void app_task(void *pvParameters)
         // 让出 CPU 给空闲/定时器任务，1ms 扫描仍由节拍钩子完成
         vTaskDelay(pdMS_TO_TICKS(1));
     }
+    // 释放任务资源 （好习惯）
+    vTaskDelete(app_task_handle);
 }
 
-// 点灯测试
-void task_led1(void *pvParameters)
+// 信号量测试
+void task1(void *pvParameters)
 {
     (void)pvParameters; // 消除编译器的"未使用参数"警告
 
     while (1)
     {
-        vTaskDelay(1000);
-        bsp_leds_open(LED1);
-        vTaskDelay(1000);
-        bsp_leds_close(LED1);
+        // 拿取信号量，没有信号一直等待
+        xSemaphoreTake(mutex_Semaphore_Handle, portMAX_DELAY);
+        printf("1");
+        // 给予信号量, 谁用了信号量，谁释放
+        xSemaphoreGive(mutex_Semaphore_Handle);
+        vTaskDelay(pdMS_TO_TICKS(300)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
+
+    // 释放任务资源 （好习惯）
+    vTaskDelete(task1_handle);
+    // 也可以这么写 vTaskDelete(NULL); // 释放自己
 }
 
-void task_led2(void *pvParameters)
+void task2(void *pvParameters)
 {
     (void)pvParameters; // 消除编译器的"未使用参数"警告
 
     while (1)
     {
-        vTaskDelay(100);
-        bsp_leds_open(LED2);
-        vTaskDelay(100);
-        bsp_leds_close(LED2);
+        // 拿取信号量，没有信号一直等待
+        xSemaphoreTake(mutex_Semaphore_Handle, portMAX_DELAY);
+        printf("2");
+        // 给予信号量, 谁用了信号量，谁释放
+        xSemaphoreGive(mutex_Semaphore_Handle);
+        vTaskDelay(pdMS_TO_TICKS(500)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
+
+    // 释放任务资源 （好习惯）
+    vTaskDelete(task2_handle);
 }
+
+void task3(void *pvParameters)
+{
+    (void)pvParameters; // 消除编译器的"未使用参数"警告
+
+    while (1)
+    {
+        printf("3");
+        vTaskDelay(pdMS_TO_TICKS(1000)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
+    }
+
+    // 释放任务资源 （好习惯）
+    vTaskDelete(task2_handle);
+}
+
+void task_keys_scan(void *pvParameters)
+{
+    (void)pvParameters; // 消除编译器的"未使用参数"警告
+
+    while (1)
+    {
+        bsp_keys_scan();
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    vTaskDelete(NULL);
+}
+
+//============ 回调函数 ============
 
 // 串口接收回调
 void on_usart_recv(USART_HandleTypeDef *huart)
@@ -93,15 +146,33 @@ void on_usart_recv(USART_HandleTypeDef *huart)
     huart->recv_buff[huart->recv_length] = '\0';
     if (huart->usartx == USART0)
     {
-        printf("usart0_recv:%s\n", huart->recv_buff);
+        // printf("usart0_recv:%s\n", huart->recv_buff);
+        send_string(huart, huart->recv_buff);
+    }
+}
+
+// 独立按键回调
+void on_key_press(KEY_NUM key)
+{
+    if (key == KEY1)
+    {
+    }
+    else if (key == KEY2)
+    {
+    }
+    else if (key == KEY3)
+    {
+    }
+    else if (key == KEY4)
+    {
     }
 }
 
 //============ 主 函 数 ============
 int main(void)
 {
-    // 配置整个工程优先级分组 抢占:0~3  响应:0~3
-    nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
+    // 配置整个工程优先级分组 抢占:0~15  响应:无
+    nvic_priority_group_set(NVIC_PRIGROUP_PRE4_SUB0);
     // 时钟倍频(全局配置 所有定时器都是168Mhz)
     rcu_timer_clock_prescaler_config(RCU_TIMER_PSC_MUL4);
 #ifndef SYS_SUPPORT_OS
@@ -187,24 +258,46 @@ int main(void)
                 APP_TASK_PRIORITY,
                 &app_task_handle);
 
-    xTaskCreate((TaskFunction_t)task_led1, // 指向实现任务功能的函数指针
-                (const char *)"task_led1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
-                64,                        // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
-                NULL,                      // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
-                2,                         // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
-                &task_led1_handler);       // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
+    // 测试实验区域
+    {
+        // 创建信号量 互斥信号量，默认有1个
+        mutex_Semaphore_Handle = xSemaphoreCreateMutex();
 
-    xTaskCreate((TaskFunction_t)task_led2,
-                (const char *)"task_led2",
-                64,
-                NULL,
-                2,
-                &task_led2_handler);
+        xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
+                    (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
+                    128,                   // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
+                    NULL,                  // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
+                    2,                     // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
+                    &task1_handle);        // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
 
+        xTaskCreate((TaskFunction_t)task2,
+                    (const char *)"task2",
+                    128,
+                    NULL,
+                    2,
+                    &task2_handle);
+
+        xTaskCreate((TaskFunction_t)task3,
+                    (const char *)"task3",
+                    128,
+                    NULL,
+                    2,
+                    &task3_handle);
+
+        xTaskCreate((TaskFunction_t)task_keys_scan,
+                    (const char *)"task_keys_scan",
+                    64,
+                    NULL,
+                    3,
+                    &task_keys_scan_handle);
+    }
+
+    // 开始调度
     vTaskStartScheduler();
 
     // 只有堆内存不足、调度器启动失败时才会执行到这里
     while (1)
     {
+        printf("heap full!\r\n");
     }
 }
