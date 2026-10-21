@@ -6,6 +6,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "taskmanager.h"
+#include "timers.h"
 //============ 片上外设 ============
 #include "msp_adc.h"
 #include "msp_exti.h"
@@ -42,8 +43,15 @@
 
 // 任务句柄
 static TaskHandle_t app_task_handle = NULL;
+
+TimerHandle_t timer1_handle;
+uint8_t timer1_id = 1;
+TimerHandle_t timer2_handle;
+uint8_t timer2_id = 2;
+
 TaskHandle_t task1_handle;
 TaskHandle_t task2_handle;
+TaskHandle_t task3_handle;
 TaskHandle_t task_keys_scan_handle;
 
 // 之前taskmanager的任务调度 TODO:一步步将任务移动到FreeRTOS的task中
@@ -57,24 +65,34 @@ static void app_task(void *pvParameters)
         task_schedule();
 
         // 让出 CPU 给空闲/定时器任务，1ms 扫描仍由节拍钩子完成
-        // vTaskDelay(pdMS_TO_TICKS(1));
-        delay_1ms(1);
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
     // 释放任务资源 （好习惯）
     vTaskDelete(app_task_handle);
 }
 
-uint32_t n = 0;
+// 软件timer测试
+void timer_callback(TimerHandle_t xTimer)
+{
+    uint8_t id = *((uint8_t *)pvTimerGetTimerID(xTimer));
+    if (id == 1)
+    {
+        printf("timer1 callback\n");
+    }
+    else if (id == 2)
+    {
+        printf("timer2 callback\n");
+    }
+}
 
-// 临界区测试
 void task1(void *pvParameters)
 {
     (void)pvParameters; // 消除编译器的"未使用参数"警告
 
     while (1)
     {
-        printf("task1\n");
-        vTaskDelay(1000); // 让出 CPU 给其他任务，与delay_1ms忙等不同
+        printf("1");
+        vTaskDelay(pdMS_TO_TICKS(300)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
 
     // 释放任务资源 （好习惯）
@@ -88,8 +106,22 @@ void task2(void *pvParameters)
 
     while (1)
     {
-        printf("task2\n");
-        vTaskDelay(1000); // 让出 CPU 给其他任务，与delay_1ms忙等不同
+        printf("2");
+        vTaskDelay(pdMS_TO_TICKS(500)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
+    }
+
+    // 释放任务资源 （好习惯）
+    vTaskDelete(task2_handle);
+}
+
+void task3(void *pvParameters)
+{
+    (void)pvParameters; // 消除编译器的"未使用参数"警告
+
+    while (1)
+    {
+        printf("3");
+        vTaskDelay(pdMS_TO_TICKS(1000)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
 
     // 释放任务资源 （好习惯）
@@ -103,8 +135,7 @@ void task_keys_scan(void *pvParameters)
     while (1)
     {
         bsp_keys_scan();
-        // vTaskDelay(100);
-        delay_1ms(100);
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 
     vTaskDelete(NULL);
@@ -121,17 +152,24 @@ void on_usart_recv(USART_HandleTypeDef *huart)
     }
 }
 
+// 独立按键回调
 void on_key_press(KEY_NUM key)
 {
     if (key == KEY1)
-    {
-        printf("disable interrupts\n");
-        portDISABLE_INTERRUPTS();
+    { // 打开timer1
+        xTimerStart(timer1_handle, 0);
     }
     else if (key == KEY2)
+    { // 停止timer1
+        xTimerStop(timer1_handle, 0);
+    }
+    else if (key == KEY3)
     {
-        printf("enable interrupts\n");
-        portENABLE_INTERRUPTS();
+        xTimerStart(timer2_handle, 0);
+    }
+    else if (key == KEY4)
+    {
+        xTimerStop(timer2_handle, 0);
     }
 }
 
@@ -225,19 +263,38 @@ int main(void)
                 APP_TASK_PRIORITY,
                 &app_task_handle);
 
-    // xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
-    //             (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
-    //             128,                   // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
-    //             NULL,                  // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
-    //             2,                     // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
-    //             &task1_handle);        // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
+    timer1_handle = xTimerCreate("timer1",            // 定时器名称
+                                 pdMS_TO_TICKS(1000), // 定时器周期，单位为系统节拍（SysTick）
+                                 pdTRUE,              // pdTRUE 表示周期性定时器，pdFALSE 表示单次定时器
+                                 &timer1_id,          // 定时器唯一id
+                                 (TimerCallbackFunction_t)timer_callback);
 
-    // xTaskCreate((TaskFunction_t)task2,
-    //             (const char *)"task2",
-    //             128,
-    //             NULL,
-    //             2,
-    //             &task2_handle);
+    timer2_handle = xTimerCreate("timer2",
+                                 pdMS_TO_TICKS(2000),
+                                 pdTRUE,
+                                 &timer2_id,
+                                 (TimerCallbackFunction_t)timer_callback);
+
+    xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
+                (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
+                128,                   // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
+                NULL,                  // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
+                2,                     // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
+                &task1_handle);        // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
+
+    xTaskCreate((TaskFunction_t)task2,
+                (const char *)"task2",
+                128,
+                NULL,
+                2,
+                &task2_handle);
+
+    xTaskCreate((TaskFunction_t)task3,
+                (const char *)"task3",
+                128,
+                NULL,
+                2,
+                &task3_handle);
 
     xTaskCreate((TaskFunction_t)task_keys_scan,
                 (const char *)"task_keys_scan",

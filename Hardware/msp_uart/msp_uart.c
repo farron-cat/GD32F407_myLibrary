@@ -95,7 +95,7 @@ static void USART_config(USART_HandleTypeDef *huart)
 
     // 4.打开中断
     // NVIC中注册中断
-    nvic_irq_enable(huart->usartx_irqn, 6, 0); // 6 > configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY == 5
+    nvic_irq_enable(huart->usartx_irqn, 2, 0);
     // read data buffer not empty interrupt
     // 读取数据缓冲区不为空中断 （一帧数据结束）
     usart_interrupt_enable(huart->usartx, USART_INT_RBNE);
