@@ -45,7 +45,7 @@
 // 任务句柄
 static TaskHandle_t app_task_handle = NULL;
 
-SemaphoreHandle_t binary_Semaphore_Handle;
+SemaphoreHandle_t counting_Semaphore_Handle;
 
 TaskHandle_t task1_handle;
 TaskHandle_t task2_handle;
@@ -78,7 +78,7 @@ void task1(void *pvParameters)
     while (1)
     {
         // 拿取信号量，没有信号一直等待
-        xSemaphoreTake(binary_Semaphore_Handle, portMAX_DELAY);
+        xSemaphoreTake(counting_Semaphore_Handle, portMAX_DELAY);
         printf("1");
         vTaskDelay(pdMS_TO_TICKS(300)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
@@ -95,7 +95,7 @@ void task2(void *pvParameters)
     while (1)
     {
         // 拿取信号量，没有信号一直等待
-        xSemaphoreTake(binary_Semaphore_Handle, portMAX_DELAY);
+        xSemaphoreTake(counting_Semaphore_Handle, portMAX_DELAY);
         printf("2");
         vTaskDelay(pdMS_TO_TICKS(500)); // 让出 CPU 给其他任务，与delay_1ms忙等不同
     }
@@ -148,13 +148,25 @@ void on_key_press(KEY_NUM key)
     if (key == KEY1)
     {
         // 给予信号量
-        xSemaphoreGive(binary_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
     }
     else if (key == KEY2)
     {
+        // 给予信号量4个
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
     }
     else if (key == KEY3)
     {
+        // 给予信号量6个
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
+        xSemaphoreGive(counting_Semaphore_Handle);
     }
     else if (key == KEY4)
     {
@@ -251,8 +263,8 @@ int main(void)
                 APP_TASK_PRIORITY,
                 &app_task_handle);
 
-    // 创建信号量 二值信号量，默认没有信号 ==0
-    binary_Semaphore_Handle = xSemaphoreCreateBinary();
+    // 创建信号量 计数信号量
+    counting_Semaphore_Handle = xSemaphoreCreateCounting(5, 3); // 最大信号量 5，初始信号量 3
 
     xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
                 (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
@@ -287,5 +299,6 @@ int main(void)
     // 只有堆内存不足、调度器启动失败时才会执行到这里
     while (1)
     {
+        printf("heap full!\r\n");
     }
 }
