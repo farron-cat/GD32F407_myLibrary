@@ -37,7 +37,9 @@
 //============  资 源  ============
 #include "bmp.h"
 
-// 应用任务：就是原来 main() 里的 while(1) 主循环
+//============  任 务  ============
+
+// 应用任务app_task：就是原来 main() 里的 while(1) 主循环
 #define APP_TASK_NAME "app"
 #define APP_TASK_STACK_SIZE 512U
 #define APP_TASK_PRIORITY (tskIDLE_PRIORITY + 3)
@@ -45,6 +47,7 @@
 // 任务句柄
 static TaskHandle_t app_task_handle = NULL;
 
+// 信号量句柄
 SemaphoreHandle_t mutex_Semaphore_Handle;
 
 TaskHandle_t task1_handle;
@@ -134,6 +137,8 @@ void task_keys_scan(void *pvParameters)
 
     vTaskDelete(NULL);
 }
+
+//============ 回调函数 ============
 
 // 串口接收回调
 void on_usart_recv(USART_HandleTypeDef *huart)
@@ -253,37 +258,41 @@ int main(void)
                 APP_TASK_PRIORITY,
                 &app_task_handle);
 
-    // 创建信号量 互斥信号量，默认有1个
-    mutex_Semaphore_Handle = xSemaphoreCreateMutex();
+    // 测试实验区域
+    {
+        // 创建信号量 互斥信号量，默认有1个
+        mutex_Semaphore_Handle = xSemaphoreCreateMutex();
 
-    xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
-                (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
-                128,                   // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
-                NULL,                  // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
-                2,                     // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
-                &task1_handle);        // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
+        xTaskCreate((TaskFunction_t)task1, // 指向实现任务功能的函数指针
+                    (const char *)"task1", // 给任务起一个描述性的名字，主要用于调试和追踪（如在调试器中查看任务列表）
+                    128,                   // 任务分配的堆栈大小，单位是“字（word）” 32位MCU中，1word=4byte 4*64=256byte
+                    NULL,                  // 一个 void * 类型的值，会作为参数传递给任务函数的 pvParameters 形参 不能是局部变量
+                    2,                     // 决定任务被调度器执行的优先顺序,数值越大，优先级越高
+                    &task1_handle);        // 一个输出参数，xTaskCreate 会通过它返回所创建任务的句柄（Handle）
 
-    xTaskCreate((TaskFunction_t)task2,
-                (const char *)"task2",
-                128,
-                NULL,
-                2,
-                &task2_handle);
+        xTaskCreate((TaskFunction_t)task2,
+                    (const char *)"task2",
+                    128,
+                    NULL,
+                    2,
+                    &task2_handle);
 
-    xTaskCreate((TaskFunction_t)task3,
-                (const char *)"task3",
-                128,
-                NULL,
-                2,
-                &task3_handle);
+        xTaskCreate((TaskFunction_t)task3,
+                    (const char *)"task3",
+                    128,
+                    NULL,
+                    2,
+                    &task3_handle);
 
-    xTaskCreate((TaskFunction_t)task_keys_scan,
-                (const char *)"task_keys_scan",
-                64,
-                NULL,
-                3,
-                &task_keys_scan_handle);
+        xTaskCreate((TaskFunction_t)task_keys_scan,
+                    (const char *)"task_keys_scan",
+                    64,
+                    NULL,
+                    3,
+                    &task_keys_scan_handle);
+    }
 
+    // 开始调度
     vTaskStartScheduler();
 
     // 只有堆内存不足、调度器启动失败时才会执行到这里
