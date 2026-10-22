@@ -142,7 +142,8 @@ targets:
         - Middleware/FreeRTOS/include
         - Middleware/FreeRTOS/portable/GCC/ARM_CM4F
       libList: []
-    excludeList: []
+    excludeList:
+      - <virtual_root>/Middleware/taskmanager.c
     settings:
       debugger: cortex-debug
     toolchain: AC6

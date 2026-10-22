@@ -194,9 +194,6 @@ void vApplicationTickHook(void)
     bsp_188_leds_scan();
     bsp_adkey_scan();
     bsp_digital_leds_scan();
-
-    /* 任务计数减一（原 SysTick_Handler 中的逻辑） */
-    task_switch();
 }
 
 #endif

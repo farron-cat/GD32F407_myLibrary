@@ -35,9 +35,37 @@ OF SUCH DAMAGE.
 #ifndef __MAIN_H
 #define __MAIN_H
 
-/* led spark function */
-void led_spark(void);
+//=========== 系统初始化 ===========
+void system_init(void);
 
-#endif /* __MAIN_H */
+//============ 启动任务 ============
+static void start_task(void *pvParameters);
 
+//============ 任务函数 ============
+static void app_task(void *pvParameters);
 
+void app_task_input_touch_key(void *pvParameters);
+
+void app_task_show_digital_leds(void *pvParameters);
+
+void app_task_show_dot_matrix(void *pvParameters);
+
+void app_task_show_188_leds_task(void *pvParameters);
+
+void app_task_show_iic_oled_task(void *pvParameters);
+
+void app_task_show_pcf8563_task(void *pvParameters);
+
+//============ 监控任务 ============
+void task_stack_monitor(void *pvParameters);
+
+//============ 测试任务 ============
+void task1(void *pvParameters);
+
+void task2(void *pvParameters);
+
+void task3(void *pvParameters);
+
+void app_task_keys_scan(void *pvParameters);
+
+#endif // __MAIN_H
